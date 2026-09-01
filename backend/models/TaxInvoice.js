@@ -14,12 +14,19 @@ const taxInvoiceItemSchema = new mongoose.Schema({
   total_amount: { type: Number, required: true }
 });
 
+const taxInvoiceRevisionSchema = new mongoose.Schema({
+  revision_no: { type: Number, default: 1 },
+  savedAt: { type: Date, default: Date.now },
+  data: { type: mongoose.Schema.Types.Mixed, default: {} }
+}, { timestamps: true });
+
 const taxInvoiceSchema = new mongoose.Schema({
   companyId: {
     type: String,
     default: 'company_madhura',
     index: true
   },
+  revisions: [taxInvoiceRevisionSchema],
   client_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
   client_name: { type: String, default: '' },
   client_company: { type: String, default: '' },

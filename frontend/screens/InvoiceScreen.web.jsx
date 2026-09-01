@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import AppLayout from "../components/AppLayout";
-import { Search, Plus, X, Edit2, Trash2, Download, Eye, FileText, RefreshCw, ArrowLeft, MapPin, Phone, Globe, Mail } from "lucide-react";
+import { Search, Plus, X, Edit2, Trash2, Download, Eye, FileText, RefreshCw, ArrowLeft, MapPin, Phone, Globe, Mail, History } from "lucide-react";
 import api from "../services/api";
 import html2pdf from "html2pdf.js";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TaxInvoiceFormModal from "../components/TaxInvoiceFormModal";
+import DraftModal from "../components/DraftModal";
+import RevisionHistoryModal from "../components/RevisionHistoryModal";
+import { getDrafts, saveDraft, removeDraft, clearDrafts } from "../utils/drafts";
 import useClientData from "../hooks/useClientData";
 import madhuraLogo from "../assets/madhura.png";
 import signatureImage from "../assets/sign.png";
@@ -245,10 +248,32 @@ export default function InvoiceScreenWeb() {
   const [showClientDrop, setShowClientDrop] = useState(false);
   const [proposals, setProposals] = useState([]);
 
+  // Revision history state
+  const [revOpen, setRevOpen] = useState(false);
+  const [revDocId, setRevDocId] = useState(null);
+
   const [serviceType, setServiceType] = useState("CRM");
   const [items, setItems] = useState([emptyItem(1)]);
   const [header, setHeader] = useState(emptyHeader());
   const [submitting, setSubmitting] = useState(false);
+
+  // Draft states
+  const [drafts, setDrafts] = useState([]);
+  const [showDrafts, setShowDrafts] = useState(false);
+  const [currentDraftId, setCurrentDraftId] = useState(null);
+  const [msg, setMsg] = useState(null);
+  const draftsPromptedRef = useRef(false);
+
+  const notify = (m) => {
+    setMsg(m);
+    setTimeout(() => setMsg(null), 2600);
+  };
+
+  const refreshDrafts = async () => {
+    const list = await getDrafts("invoice");
+    setDrafts(list);
+    return list;
+  };
 
   const previewRef = useRef(null);
   const postSaveRef = useRef(null);
@@ -261,6 +286,7 @@ export default function InvoiceScreenWeb() {
       if (stored) setRole(JSON.parse(stored).role);
       fetchInvoices();
       fetchProposals();
+      refreshDrafts();
     };
     load();
   }, []);
@@ -334,27 +360,48 @@ export default function InvoiceScreenWeb() {
     await fetchNextDetails(header.client_id, newType);
   };
 
+  const rowsToHeaderItems = (rows) => {
+    const h = rows[0];
+    const header = {
+      client_id: h.client_id || null, client_name: h.client_name || "",
+      client_company: h.client_company || "", client_address: h.client_address || "",
+      client_gstin: h.client_gstin || "", service_no: h.service_no || "",
+      client_code: h.client_code || "", invoice_no: h.invoice_no || "",
+      running_bill_no: h.running_bill_no || "",
+      bill_date: h.bill_date ? String(h.bill_date).slice(0, 10) : "",
+      advance_amount: h.advance_amount || "",
+    };
+    const items = rows.filter(r => r.sl_no != null).map(r => ({
+      sl_no: r.sl_no, description: r.description || "", sac_code: r.sac_code || "",
+      uom: r.uom || "Lumpsum", quantity: r.quantity || 1,
+      total_amount: Number(r.total_amount) || 0,
+    }));
+    return { header, items: items.length ? items : [emptyItem(1)] };
+  };
+
+  const renderRevPreview = (rows) => {
+    const { header, items } = rowsToHeaderItems(rows);
+    const sub = items.reduce((s, it) => s + (Number(it.total_amount) || 0), 0);
+    return (
+      <InvoicePreview
+        header={header}
+        items={items}
+        subtotal={sub}
+        cgst={sub * 0.09}
+        sgst={sub * 0.09}
+        grandTotal={sub * 1.18}
+        advance={Number(header.advance_amount) || 0}
+        netPayable={(sub * 1.18) - (Number(header.advance_amount) || 0)}
+      />
+    );
+  };
+
   const openPreview = async (inv) => {
     setViewId(inv.id);
     try {
       const res = await api.get(`/madhura-invoice/${inv.id}`);
-      const rows = res.data;
-      const h = rows[0];
-      const loadedHeader = {
-        client_id: h.client_id || null, client_name: h.client_name || "",
-        client_company: h.client_company || "", client_address: h.client_address || "",
-        client_gstin: h.client_gstin || "", service_no: h.service_no || "",
-        client_code: h.client_code || "", invoice_no: h.invoice_no || "",
-        running_bill_no: h.running_bill_no || "",
-        bill_date: h.bill_date ? h.bill_date.slice(0, 10) : "",
-        advance_amount: h.advance_amount || "",
-      };
-      const loadedItems = rows.filter(r => r.sl_no != null).map(r => ({
-        sl_no: r.sl_no, description: r.description || "", sac_code: r.sac_code || "",
-        uom: r.uom || "Lumpsum", quantity: r.quantity || 1,
-        total_amount: r.total_amount || "",
-      }));
-      setViewData({ header: loadedHeader, items: loadedItems.length ? loadedItems : [emptyItem(1)] });
+      const { header, items } = rowsToHeaderItems(res.data);
+      setViewData({ header, items });
       setShowPreview(true);
     } catch (err) {
       console.error("Preview load error:", err);
@@ -397,6 +444,11 @@ export default function InvoiceScreenWeb() {
     setOpen(true);
     clearClientData();
     await fetchNextDetails(null, "CRM");
+    const dl = await refreshDrafts();
+    if (dl.length > 0 && !draftsPromptedRef.current) {
+      setShowDrafts(true);
+      draftsPromptedRef.current = true;
+    }
   };
 
   const openEdit = async (inv) => {
@@ -435,6 +487,68 @@ export default function InvoiceScreenWeb() {
     clearClientData();
   };
 
+  const handleSaveDraft = async () => {
+    const payload = {
+      header,
+      items,
+      serviceType,
+      clientSearch,
+    };
+    const summary = {
+      label: header.bill_date
+        ? `Tax Invoice · ${header.bill_date}`
+        : "Invoice draft",
+      customer: header.client_name || "",
+      company: header.client_company || "",
+    };
+    const draft = await saveDraft("invoice", payload, summary);
+    setCurrentDraftId(draft.id);
+    await refreshDrafts();
+    draftsPromptedRef.current = false;
+    notify("Draft saved — you can leave and resume anytime");
+  };
+
+  const handleLoadDraft = async (draft) => {
+    const d = (draft && draft.payload) || {};
+    setHeader({ ...emptyHeader(), ...(d.header || {}) });
+    setItems(
+      d.items && d.items.length
+        ? d.items
+        : [emptyItem(1)]
+    );
+    setServiceType((d.serviceType) || "CRM");
+    setClientSearch(d.clientSearch || "");
+    setClientList([]);
+    setShowClientDrop(false);
+    setCurrentDraftId(draft.id);
+    setEditInvoiceId(null);
+    setSavedId(null);
+    setPostSavePreview(false);
+    setShowDrafts(false);
+    setOpen(true);
+    notify("Draft loaded");
+  };
+
+  const handleDeleteDraft = async (id) => {
+    await removeDraft("invoice", id);
+    if (currentDraftId === id) setCurrentDraftId(null);
+    await refreshDrafts();
+  };
+
+  const handleClearDrafts = async () => {
+    await clearDrafts("invoice");
+    setCurrentDraftId(null);
+    await refreshDrafts();
+  };
+
+  const handleStartNewDraft = async () => {
+    setCurrentDraftId(null);
+    setShowDrafts(false);
+    draftsPromptedRef.current = true;
+    resetClose();
+    await openNew();
+  };
+
   const updateItem = (idx, field, value) =>
     setItems(prev => prev.map((it, i) => i === idx ? { ...it, [field]: value } : it));
   const addItem = () => setItems(prev => [...prev, emptyItem(prev.length + 1)]);
@@ -468,6 +582,11 @@ export default function InvoiceScreenWeb() {
         setSavedId(res.data.invoiceId);
       }
       setPostSavePreview(true);
+      if (currentDraftId) {
+        await removeDraft("invoice", currentDraftId);
+        setCurrentDraftId(null);
+      }
+      refreshDrafts();
       fetchInvoices();
     } catch (err) {
       alert(err.response?.data?.message || "Save failed");
@@ -516,6 +635,15 @@ export default function InvoiceScreenWeb() {
           >
             <Plus size={18} /> New Invoice
           </button>
+          {drafts.length > 0 && (
+            <button
+              onClick={() => setShowDrafts(true)}
+              className="border bg-white hover:bg-gray-50 text-gray-700 font-semibold py-2 px-4 rounded-lg flex items-center gap-2 shadow"
+            >
+              <FileText size={16} /> Drafts
+              <span className="bg-[#0088CC] text-white text-[10px] font-bold h-5 min-w-5 px-1 rounded-full flex items-center justify-center">{drafts.length}</span>
+            </button>
+          )}
         </div>
 
         {/* Search */}
@@ -559,6 +687,7 @@ export default function InvoiceScreenWeb() {
                     <td className="p-4 flex gap-2 justify-center">
                       <button onClick={() => openPreview(inv)} className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg" title="Preview Print"><Eye size={16} /></button>
                       <button onClick={() => openEdit(inv)} className="p-2 hover:bg-yellow-50 text-yellow-600 rounded-lg" title="Edit"><Edit2 size={16} /></button>
+                      <button onClick={() => { setRevDocId(inv.id); setRevOpen(true); }} className="p-2 hover:bg-purple-50 text-purple-600 rounded-lg" title="Revisions"><History size={16} /></button>
                       <button onClick={() => handleDelete(inv.id)} className="p-2 hover:bg-red-50 text-red-500 rounded-lg" title="Delete"><Trash2 size={16} /></button>
                     </td>
                   </tr>
@@ -594,6 +723,7 @@ export default function InvoiceScreenWeb() {
           handleRefresh={() => fetchNextDetails(header.client_id, serviceType)}
           resetForm={resetClose}
           submitting={submitting}
+          onSaveDraft={handleSaveDraft}
           aggregatedData={aggregatedData}
           setItems={setItems}
         />
@@ -651,6 +781,36 @@ export default function InvoiceScreenWeb() {
                 />
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Drafts Modal */}
+        <DraftModal
+          open={showDrafts}
+          title="Tax Invoices"
+          drafts={drafts}
+          onLoad={handleLoadDraft}
+          onDelete={handleDeleteDraft}
+          onClearAll={handleClearDrafts}
+          onStartNew={handleStartNewDraft}
+          onClose={() => setShowDrafts(false)}
+        />
+
+        {/* Revision History Modal */}
+        <RevisionHistoryModal
+          open={revOpen}
+          onClose={() => setRevOpen(false)}
+          title="Tax Invoice Revisions"
+          docId={revDocId}
+          baseUrl="/madhura-invoice"
+          type="taxinvoice"
+          onDeleted={fetchInvoices}
+          renderRevPreview={renderRevPreview}
+        />
+
+        {msg && (
+          <div className="fixed bottom-6 right-6 z-[80] bg-slate-800 text-white px-4 py-3 rounded-lg shadow-xl text-sm flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-green-400" /> {msg}
           </div>
         )}
       </div>

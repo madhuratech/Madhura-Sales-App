@@ -1,11 +1,10 @@
 import React from "react";
-import { PlusCircle, X } from "lucide-react";
+import { PlusCircle, X, FileText } from "lucide-react";
 
 const UOM_OPTIONS = ["Nos", "Units", "Pieces", "Boxes", "Sets", "Meters", "Kg", "Liters"];
 const TAX_OPTIONS = [
   { value: "GST18", label: "GST 18%" },
-  { value: "GST5", label: "GST 5%" },
-  { value: "CUSTOM", label: "Custom GST %" },
+  { value: "GST0", label: "GST 0%" },
 ];
 
 function SectionTitle({ children }) {
@@ -43,6 +42,7 @@ export default function ProformaInvoiceFormModal({
   handleSubmit,
   resetForm,
   submitting,
+  onSaveDraft,
 }) {
   if (!open) return null;
 
@@ -50,6 +50,7 @@ export default function ProformaInvoiceFormModal({
 
   // Get tax rate
   const getTaxRate = () => {
+    if (extra.tax_type === "GST0") return 0;
     if (extra.tax_type === "GST5") return 5;
     if (extra.tax_type === "CUSTOM") return Number(extra.custom_tax) || 0;
     return 18;
@@ -62,7 +63,7 @@ export default function ProformaInvoiceFormModal({
     const rate = Number(item.price) || 0;
     const qty = Number(item.qty) || 0;
     const discount = Number(item.discount) || 0;
-    const tax = Number(item.tax) || taxRate;
+    const tax = taxRate;
 
     const subtotal = (rate * qty) - discount;
     const taxValue = subtotal * (tax / 100);
@@ -302,7 +303,7 @@ export default function ProformaInvoiceFormModal({
           {/* TAX CONFIGURATION */}
           <div>
             <SectionTitle>TAX CONFIGURATION</SectionTitle>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {TAX_OPTIONS.map(opt => (
                 <label
                   key={opt.value}
@@ -322,19 +323,10 @@ export default function ProformaInvoiceFormModal({
                 </label>
               ))}
             </div>
-            {extra.tax_type === "CUSTOM" && (
-              <div className="mt-3 max-w-xs">
-                <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">Custom GST %</label>
-                <input
-                  type="number"
-                  value={extra.custom_tax}
-                  onChange={e => setExtra(ex => ({ ...ex, custom_tax: e.target.value }))}
-                  placeholder="e.g. 12"
-                  min="0"
-                  max="100"
-                  className="border border-gray-300 rounded-lg px-3 py-2 outline-none text-sm w-full focus:border-[#0088CC] focus:ring-1 focus:ring-[#0088CC]"
-                />
-              </div>
+            {taxRate > 0 && (
+              <p className="text-xs text-gray-500 mt-2">
+                GST @ {taxRate}% will be calculated automatically on the line items.
+              </p>
             )}
           </div>
 
@@ -355,9 +347,9 @@ export default function ProformaInvoiceFormModal({
                       <th className="px-3 py-3 text-center" style={{ width: "80px" }}>UOM</th>
                       <th className="px-3 py-3 text-center" style={{ width: "70px" }}>QTY</th>
                       <th className="px-3 py-3 text-right" style={{ width: "100px" }}>RATE (₹)</th>
-                      <th className="px-3 py-3 text-center" style={{ width: "70px" }}>GST %</th>
-                      <th className="px-3 py-3 text-right" style={{ width: "100px" }}>TAX VALUE</th>
+                      {taxRate > 0 && <th className="px-3 py-3 text-right" style={{ width: "100px" }}>TAX VALUE</th>}
                       <th className="px-3 py-3 text-right" style={{ width: "120px" }}>AMOUNT (₹)</th>
+                      <th className="px-3 py-3 text-center" style={{ width: "40px" }}></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -417,19 +409,25 @@ export default function ProformaInvoiceFormModal({
                               className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs outline-none text-right focus:border-[#0088CC]"
                             />
                           </td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="number"
-                              value={item.tax || taxRate}
-                              readOnly
-                              className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs outline-none text-center bg-gray-50 text-gray-500"
-                            />
-                          </td>
-                          <td className="px-3 py-2 text-right font-medium text-gray-700">
-                            ₹{fmtNum(taxValue)}
-                          </td>
+                          {taxRate > 0 && (
+                            <td className="px-3 py-2 text-right font-medium text-gray-700">
+                              ₹{fmtNum(taxValue)}
+                            </td>
+                          )}
                           <td className="px-3 py-2 text-right font-bold text-gray-800">
                             ₹{fmtNum(amount)}
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            {items.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeItem(i)}
+                                className="text-gray-400 hover:text-red-500 transition p-1 rounded hover:bg-red-50"
+                                title="Remove item"
+                              >
+                                <X size={16} />
+                              </button>
+                            )}
                           </td>
                         </tr>
                       );
@@ -456,14 +454,18 @@ export default function ProformaInvoiceFormModal({
                   <span>Subtotal (Exclusive)</span>
                   <span className="font-semibold">₹{fmtNum(totals.subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>CGST ({taxRate / 2}%)</span>
-                  <span className="font-semibold">₹{fmtNum(totals.cgst)}</span>
-                </div>
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>SGST ({taxRate / 2}%)</span>
-                  <span className="font-semibold">₹{fmtNum(totals.sgst)}</span>
-                </div>
+                {taxRate > 0 && (
+                  <>
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>CGST ({taxRate / 2}%)</span>
+                      <span className="font-semibold">₹{fmtNum(totals.cgst)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>SGST ({taxRate / 2}%)</span>
+                      <span className="font-semibold">₹{fmtNum(totals.sgst)}</span>
+                    </div>
+                  </>
+                )}
                 <div className="flex justify-between text-lg font-bold text-[#0088CC] border-t pt-2">
                   <span>Net Total</span>
                   <span>₹{fmtNum(totals.netTotal)}</span>
@@ -557,6 +559,13 @@ export default function ProformaInvoiceFormModal({
               className="border border-gray-300 rounded-lg px-6 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50"
             >
               Cancel
+            </button>
+            <button
+              type="button"
+              onClick={onSaveDraft}
+              className="border border-[#0088CC] text-[#0088CC] hover:bg-blue-50 rounded-lg px-6 py-2.5 text-sm font-semibold flex items-center gap-2"
+            >
+              <FileText size={15} /> Save Draft
             </button>
             <button
               type="submit"

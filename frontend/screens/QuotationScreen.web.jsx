@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import AppLayout from "../components/AppLayout";
-import { Plus, Search, Download, X, Edit2, Trash2, Mail, RefreshCw, Eye, FileText } from "lucide-react";
+import { Plus, Search, Download, X, Edit2, Trash2, Mail, RefreshCw, Eye, FileText, History } from "lucide-react";
 import api from "../services/api";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import InvoiceTemplate from "../components/invoicetemplate.web";
 import QuotationFormModal from "../components/QuotationFormModal";
+import DraftModal from "../components/DraftModal";
+import RevisionHistoryModal from "../components/RevisionHistoryModal";
+import { getDrafts, saveDraft, removeDraft, clearDrafts } from "../utils/drafts";
 
 const UOM_OPTIONS = ["Nos", "Units", "Pieces", "Boxes", "Sets", "Meters", "Kg", "Liters"];
 
@@ -43,6 +46,10 @@ export default function QuotationScreenWeb() {
   const [mailSubject, setMailSubject] = useState("");
   const [mailSending, setMailSending] = useState(false);
 
+  // Revision history state
+  const [revOpen, setRevOpen] = useState(false);
+  const [revDocId, setRevDocId] = useState(null);
+
   // Client Search Autocomplete
   const [clientSearch, setClientSearch] = useState("");
   const [clientList, setClientList] = useState([]);
@@ -54,6 +61,24 @@ export default function QuotationScreenWeb() {
   const [quotation, setQuotation] = useState({ quotation_date: new Date().toISOString().slice(0, 10) });
   const [extra, setExtra] = useState(emptyExtra());
   const [terms, setTerms] = useState(defaultTerms);
+
+  // Draft states
+  const [drafts, setDrafts] = useState([]);
+  const [showDrafts, setShowDrafts] = useState(false);
+  const [currentDraftId, setCurrentDraftId] = useState(null);
+  const [msg, setMsg] = useState(null);
+  const draftsPromptedRef = useRef(false);
+
+  const notify = (m) => {
+    setMsg(m);
+    setTimeout(() => setMsg(null), 2600);
+  };
+
+  const refreshDrafts = async () => {
+    const list = await getDrafts("quotation");
+    setDrafts(list);
+    return list;
+  };
 
   const invoiceRef = useRef(null);
 
@@ -67,6 +92,7 @@ export default function QuotationScreenWeb() {
       const stored = await AsyncStorage.getItem('user');
       if (stored) setRole(JSON.parse(stored).role);
       fetchQuotations();
+      refreshDrafts();
 
       try {
         const savedTerms = await AsyncStorage.getItem('lastQT_Terms');
@@ -186,6 +212,7 @@ export default function QuotationScreenWeb() {
   };
 
   const getTaxRate = () => {
+    if (extra.tax_type === "GST0") return 0;
     if (extra.tax_type === "GST5") return 5;
     if (extra.tax_type === "CUSTOM") return Number(extra.custom_tax) || 0;
     return 18;
@@ -195,7 +222,7 @@ export default function QuotationScreenWeb() {
     const rate = Number(item.price) || 0;
     const qty = Number(item.qty) || 0;
     const discount = Number(item.discount) || 0;
-    const tax = Number(item.tax) || getTaxRate();
+    const tax = getTaxRate();
 
     const subtotal = (rate * qty) - discount;
     const taxValue = subtotal * (tax / 100);
@@ -267,6 +294,11 @@ export default function QuotationScreenWeb() {
       }
       
       await AsyncStorage.setItem('lastQT_Terms', JSON.stringify(terms));
+      if (currentDraftId) {
+        await removeDraft("quotation", currentDraftId);
+        setCurrentDraftId(null);
+      }
+      refreshDrafts();
       setOpen(false);
       resetForm();
       fetchQuotations();
@@ -299,6 +331,74 @@ export default function QuotationScreenWeb() {
     setClientSearch("");
     setEditId(null);
     setOpen(false);
+  };
+
+  const handleSaveDraft = async () => {
+    const payload = {
+      customer,
+      quotation,
+      extra,
+      items,
+      terms,
+      clientSearch,
+    };
+    const summary = {
+      label: quotation.quotation_date
+        ? `Quotation · ${quotation.quotation_date}`
+        : "Quotation draft",
+      customer: customer.customer_name || "",
+      company: extra.client_company || "",
+    };
+    const draft = await saveDraft("quotation", payload, summary);
+    setCurrentDraftId(draft.id);
+    await refreshDrafts();
+    draftsPromptedRef.current = false;
+    notify("Draft saved — you can leave and resume anytime");
+  };
+
+  const handleLoadDraft = async (draft) => {
+    const d = (draft && draft.payload) || {};
+    setCustomer({ customer_name: "", mobile_number: "", email: "", location_city: "", ...(d.customer || {}) });
+    setQuotation({ quotation_date: new Date().toISOString().slice(0, 10), ...(d.quotation || {}) });
+    setExtra({ ...emptyExtra(), ...(d.extra || {}) });
+    setItems((d.items && d.items.length ? d.items : [{ hsn_code: "", name: "", uom: "Nos", price: 0, qty: 1, tax: 18, discount: 0 }]));
+    setTerms(Array.isArray(d.terms) && d.terms.length ? d.terms : defaultTerms);
+    setClientSearch(d.clientSearch || "");
+    setCurrentDraftId(draft.id);
+    setEditId(null);
+    setShowDrafts(false);
+    setOpen(true);
+    notify("Draft loaded");
+  };
+
+  const handleDeleteDraft = async (id) => {
+    await removeDraft("quotation", id);
+    if (currentDraftId === id) setCurrentDraftId(null);
+    await refreshDrafts();
+  };
+
+  const handleClearDrafts = async () => {
+    await clearDrafts("quotation");
+    setCurrentDraftId(null);
+    await refreshDrafts();
+  };
+
+  const handleStartNewDraft = async () => {
+    setCurrentDraftId(null);
+    setShowDrafts(false);
+    await resetForm();
+    setOpen(true);
+  };
+
+  const openCreate = async () => {
+    const dl = await refreshDrafts();
+    await resetForm();
+    setEditId(null);
+    setOpen(true);
+    if (dl.length > 0 && !draftsPromptedRef.current) {
+      setShowDrafts(true);
+      draftsPromptedRef.current = true;
+    }
   };
 
   const handleDelete = async () => {
@@ -372,9 +472,13 @@ export default function QuotationScreenWeb() {
     setItems(p => [...p, { hsn_code: "", name: "", uom: "Nos", price: 0, qty: 1, tax: getTaxRate(), discount: 0 }]);
   };
 
-  const removeItem = () => {
+  const removeItem = (idx) => {
     if (items.length <= 1) return;
-    setItems(items.slice(0, -1));
+    if (typeof idx === 'number') {
+      setItems(prev => prev.filter((_, i) => i !== idx));
+    } else {
+      setItems(prev => prev.slice(0, -1));
+    }
   };
 
   const filteredQuotations = quotations.filter(q =>
@@ -394,7 +498,13 @@ export default function QuotationScreenWeb() {
             <FileText size={24} /> CRM Quotations
           </h2>
           <div className="flex gap-2">
-            <button onClick={() => setOpen(true)} className="bg-[#1B2B4B] hover:bg-[#243454] text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2"><Plus size={16} /> Create Quote</button>
+            <button onClick={openCreate} className="bg-[#1B2B4B] hover:bg-[#243454] text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2"><Plus size={16} /> Create Quote</button>
+            {drafts.length > 0 && (
+              <button onClick={() => setShowDrafts(true)} className="border text-gray-700 bg-white hover:bg-gray-50 px-4 py-2 rounded-lg font-semibold flex items-center gap-2">
+                <FileText size={16} /> Drafts
+                <span className="bg-[#0088CC] text-white text-[10px] font-bold h-5 min-w-5 px-1 rounded-full flex items-center justify-center">{drafts.length}</span>
+              </button>
+            )}
             <button onClick={openMailModal} className="border text-gray-700 bg-white hover:bg-gray-50 px-4 py-2 rounded-lg font-semibold flex items-center gap-2"><Mail size={16} /> Send Email</button>
             <button onClick={() => { if (selectedId) { setViewId(selectedId); setShowInvoice(true); } else { alert("Select an item to view"); } }} className="border text-gray-700 bg-white hover:bg-gray-50 px-4 py-2 rounded-lg font-semibold flex items-center gap-2"><Eye size={16} /> View Preview</button>
             <button onClick={() => { if (selectedId) handleEdit(selectedId); else alert("Select item to edit"); }} className="border text-gray-700 bg-white hover:bg-gray-50 px-4 py-2 rounded-lg font-semibold flex items-center gap-2"><Edit2 size={16} /> Edit</button>
@@ -431,6 +541,7 @@ export default function QuotationScreenWeb() {
                   <th className="p-4">Customer Name</th>
                   <th className="p-4">City</th>
                   <th className="p-4">Amount</th>
+                  <th className="p-4">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -447,6 +558,15 @@ export default function QuotationScreenWeb() {
                     <td className="p-4 font-semibold text-gray-700">{p.customer_name}</td>
                     <td className="p-4 text-gray-600">{p.location_city || "—"}</td>
                     <td className="p-4 font-bold text-gray-800">&#8377;{Number(p.grand_total).toLocaleString()}</td>
+                    <td className="p-4">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setRevDocId(p.id); setRevOpen(true); }}
+                        className="p-2 hover:bg-purple-50 text-purple-600 rounded-lg"
+                        title={`Revisions - ${p.customer_name || "Customer"}`}
+                      >
+                        <History size={16} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -478,6 +598,7 @@ export default function QuotationScreenWeb() {
           handleSubmit={handleSubmit}
           resetForm={resetForm}
           submitting={submitting}
+          onSaveDraft={handleSaveDraft}
         />
 
         {/* View Modal */}
@@ -523,6 +644,35 @@ export default function QuotationScreenWeb() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Drafts Modal */}
+        <DraftModal
+          open={showDrafts}
+          title="Quotations"
+          drafts={drafts}
+          onLoad={handleLoadDraft}
+          onDelete={handleDeleteDraft}
+          onClearAll={handleClearDrafts}
+          onStartNew={handleStartNewDraft}
+          onClose={() => setShowDrafts(false)}
+        />
+
+        {/* Revision History Modal */}
+        <RevisionHistoryModal
+          open={revOpen}
+          onClose={() => setRevOpen(false)}
+          title="Quotation Revisions"
+          docId={revDocId}
+          baseUrl="/crm-quotations"
+          type="quotation"
+          onDeleted={fetchQuotations}
+        />
+
+        {msg && (
+          <div className="fixed bottom-6 right-6 z-[80] bg-slate-800 text-white px-4 py-3 rounded-lg shadow-xl text-sm flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-green-400" /> {msg}
           </div>
         )}
       </div>

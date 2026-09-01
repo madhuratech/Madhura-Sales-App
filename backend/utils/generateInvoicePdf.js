@@ -60,7 +60,15 @@ async function generateInvoicePdf({ invoice, items, type, label, prefix }) {
   
   // Format doc number cleanly
   const docNumber   = h.reference_no || `${docPrefix}-${year}-${String(docId).slice(-3)}`;
-  const taxRate     = h.tax_type === "GST5" ? 5 : h.tax_type === "CUSTOM" ? (Number(h.custom_tax) || 0) : 18;
+  const taxRate     = h.tax_type === "GST0" ? 0
+    : h.tax_type === "GST5" ? 5
+    : h.tax_type === "CUSTOM" ? (Number(h.custom_tax) || 0)
+    : 18;
+
+  // Only show the tax columns when GST is applicable
+  const showTax = taxRate > 0;
+  // Only show the HSN column when at least one line item has an HSN code
+  const showHsn = (items || []).some(item => item.hsn_code && String(item.hsn_code).trim() !== "");
 
   const clientAddr  = [h.client_address1, h.client_address2, h.client_city, h.client_state, h.client_pincode]
     .filter(Boolean).join(", ");
@@ -85,22 +93,24 @@ async function generateInvoicePdf({ invoice, items, type, label, prefix }) {
   if (h.terms_warranty) terms.push(`Warranty: ${esc(h.terms_warranty)}`);
 
   const itemRows = (items || []).map((item, i) => {
-    const itemTax = Number(item.tax || taxRate || 18);
+    const itemTax = Number(item.tax || taxRate || 0);
     const itemQty = Number(item.quantity || 1);
     const itemRate = Number(item.price || 0);
     const taxVal = itemQty * itemRate * (itemTax / 100);
     const itemAmt = itemQty * itemRate;
 
-    return `<tr class="${i % 2 === 0 ? "row-even" : "row-odd"}">
-      <td class="tc center">${i + 1}</td>
-      <td class="tc center">${esc(item.hsn_code || "—")}</td>
-      <td class="td-desc"><strong>${esc(item.description || "")}</strong></td>
-      <td class="tc center">${esc(String(itemQty))} ${esc(item.uom || "Nos")}</td>
-      <td class="tc right">&#8377;${fmtNum(itemRate)}</td>
-      <td class="tc center">${itemTax}%</td>
-      <td class="tc right">&#8377;${fmtNum(taxVal)}</td>
-      <td class="tc right bold">&#8377;${fmtNum(itemAmt)}</td>
-    </tr>`;
+    let cells = `<td class="tc center">${i + 1}</td>`;
+    if (showHsn) cells += `<td class="tc center">${esc(item.hsn_code || "—")}</td>`;
+    cells += `<td class="td-desc"><strong>${esc(item.description || "")}</strong></td>`;
+    cells += `<td class="tc center">${esc(String(itemQty))} ${esc(item.uom || "Nos")}</td>`;
+    cells += `<td class="tc right">&#8377;${fmtNum(itemRate)}</td>`;
+    if (showTax) {
+      cells += `<td class="tc center">${itemTax}%</td>`;
+      cells += `<td class="tc right">&#8377;${fmtNum(taxVal)}</td>`;
+    }
+    cells += `<td class="tc right bold">&#8377;${fmtNum(itemAmt)}</td>`;
+
+    return `<tr class="${i % 2 === 0 ? "row-even" : "row-odd"}">${cells}</tr>`;
   }).join("");
 
   const logoHtml = LOGO_SRC
@@ -295,12 +305,12 @@ async function generateInvoicePdf({ invoice, items, type, label, prefix }) {
       <thead>
         <tr>
           <th style="width:4%;">#</th>
-          <th style="width:8%;">HSN</th>
+          ${showHsn ? '<th style="width:8%;">HSN</th>' : ''}
           <th class="left" style="text-align:left;">Description</th>
           <th style="width:7%;">Qty</th>
           <th style="width:10%;text-align:right;">Rate</th>
-          <th style="width:6%;">GST</th>
-          <th style="width:11%;text-align:right;">Tax Val</th>
+          ${showTax ? '<th style="width:6%;">GST</th>' : ''}
+          ${showTax ? '<th style="width:11%;text-align:right;">Tax Val</th>' : ''}
           <th style="width:16%;text-align:right;">Amount</th>
         </tr>
       </thead>
@@ -315,8 +325,8 @@ async function generateInvoicePdf({ invoice, items, type, label, prefix }) {
     <table class="totals">
       <tr><td>Subtotal</td><td class="right">&#8377;${fmtNum(h.subtotal)}</td></tr>
       ${discRow}
-      <tr><td>CGST (${taxRate / 2}%)</td><td class="right">&#8377;${fmtNum(h.total_cgst)}</td></tr>
-      <tr><td>SGST (${taxRate / 2}%)</td><td class="right">&#8377;${fmtNum(h.total_sgst)}</td></tr>
+      ${showTax ? `<tr><td>CGST (${taxRate / 2}%)</td><td class="right">&#8377;${fmtNum(h.total_cgst)}</td></tr>` : ''}
+      ${showTax ? `<tr><td>SGST (${taxRate / 2}%)</td><td class="right">&#8377;${fmtNum(h.total_sgst)}</td></tr>` : ''}
       <tr class="gt-row">
         <td class="bold">Grand Total</td>
         <td class="right">&#8377;${fmtNum(h.grand_total)}</td>

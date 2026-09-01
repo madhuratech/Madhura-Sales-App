@@ -18,12 +18,19 @@ const performaItemSchema = new mongoose.Schema({
   hsn_code: { type: String, default: '' }
 });
 
+const performaRevisionSchema = new mongoose.Schema({
+  revision_no: { type: Number, default: 1 },
+  savedAt: { type: Date, default: Date.now },
+  data: { type: mongoose.Schema.Types.Mixed, default: {} }
+}, { timestamps: true });
+
 const performaInvoiceSchema = new mongoose.Schema({
   companyId: {
     type: String,
     default: 'company_madhura',
     index: true
   },
+  revisions: [performaRevisionSchema],
   customer_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true },
   invoice_date: { type: Date, required: true },
   subtotal: { type: Number, default: 0 },

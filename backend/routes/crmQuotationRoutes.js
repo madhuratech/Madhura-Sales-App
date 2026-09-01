@@ -6,7 +6,10 @@ const {
   createQuotation, 
   updateQuotation, 
   deleteQuotation, 
-  sendEmail 
+  sendEmail,
+  getQuotationRevisions,
+  getQuotationRevisionById,
+  deleteQuotationRevision
 } = require('../controllers/crmQuotationController');
 const { 
   getFromAddresses, 
@@ -24,5 +27,9 @@ router.route('/').get(protect, getQuotations);
 router.route('/create').post(protect, createQuotation);
 router.route('/:id').get(protect, getQuotationById).put(protect, updateQuotation).delete(protect, deleteQuotation);
 router.route('/send-email/:id').post(protect, sendEmail);
+
+// Revision history endpoints
+router.route('/:id/revisions').get(protect, getQuotationRevisions);
+router.route('/:id/revisions/:revisionId').get(protect, getQuotationRevisionById).delete(protect, deleteQuotationRevision);
 
 module.exports = router;

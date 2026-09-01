@@ -23,12 +23,110 @@ const validateInvoice = (body) => {
   return null;
 };
 
+// Resolve customer contact info from either a populated customer_id or a revision snapshot
+const customerInfo = (doc) => {
+  if (doc.customer_id && typeof doc.customer_id === 'object' && doc.customer_id.customer_name) {
+    return {
+      customer_name: doc.customer_id.customer_name,
+      mobile_number: doc.customer_id.mobile_number,
+      email: doc.customer_id.email,
+      location_city: doc.customer_id.location_city
+    };
+  }
+  if (doc._customer) {
+    return {
+      customer_name: doc._customer.customer_name || '',
+      mobile_number: doc._customer.mobile_number || '',
+      email: doc._customer.email || '',
+      location_city: doc._customer.location_city || ''
+    };
+  }
+  return { customer_name: '', mobile_number: '', email: '', location_city: '' };
+};
+
+// Map a proforma invoice document (or revision snapshot) into flat rows
+const mapProformaRows = (p) => {
+  const c = customerInfo(p);
+  return p.items.map(item => ({
+    performainvoice_id: p._id,
+    invoice_date: p.invoice_date,
+    subtotal: p.subtotal,
+    total_tax: p.total_tax,
+    total_cgst: p.total_cgst,
+    total_sgst: p.total_sgst,
+    total_discount: p.total_discount,
+    grand_total: p.grand_total,
+    reference_no: p.reference_no,
+    from_address_id: p.from_address_id?._id || p.from_address_id || null,
+    from_address_custom: p.from_address_custom,
+    resolved_from_address: p.from_address_custom || p.from_address_id?.address || '',
+    client_company: p.client_company,
+    client_address1: p.client_address1,
+    client_address2: p.client_address2,
+    client_city: p.client_city,
+    client_state: p.client_state,
+    client_pincode: p.client_pincode,
+    client_country: p.client_country,
+    client_gstin: p.client_gstin,
+    tax_type: p.tax_type,
+    custom_tax: p.custom_tax,
+    exec_name: p.exec_name,
+    exec_phone: p.exec_phone,
+    exec_email: p.exec_email,
+    terms_general: p.terms_general ? 1 : 0,
+    terms_tax: p.terms_tax ? 1 : 0,
+    terms_project_period: p.terms_project_period,
+    terms_validity: p.terms_validity ? 1 : 0,
+    terms_separate_orders: p.terms_separate_orders,
+    terms_payment: p.terms_payment,
+    terms_payment_custom: p.terms_payment_custom,
+    terms_warranty: p.terms_warranty,
+    validity: p.validity,
+    terms_json: p.terms_json,
+    customer_name: c.customer_name,
+    mobile_number: c.mobile_number,
+    email: c.email,
+    location_city: c.location_city,
+    product_number: item.product_number,
+    description: item.description,
+    brand_model: item.brand_model,
+    uom: item.uom,
+    price: item.price,
+    quantity: item.quantity,
+    tax: item.tax,
+    discount: item.discount,
+    item_subtotal: item.subtotal,
+    hsn_code: item.hsn_code
+  }));
+};
+
+// Build a revision snapshot of a proforma invoice (with resolved customer contact info)
+const makeProformaSnapshot = (doc, dbCustomer) => {
+  const obj = doc.toObject();
+  const snapshot = { ...obj };
+  snapshot._customer = dbCustomer
+    ? {
+        customer_name: dbCustomer.customer_name || '',
+        mobile_number: dbCustomer.mobile_number || '',
+        email: dbCustomer.email || '',
+        location_city: dbCustomer.location_city || ''
+      }
+    : customerInfo(doc);
+  delete snapshot._id;
+  delete snapshot.__v;
+  delete snapshot.revisions;
+  delete snapshot.createdAt;
+  delete snapshot.updatedAt;
+  delete snapshot.companyId;
+  return snapshot;
+};
+
 // GET all proforma invoices
 exports.getProformaInvoices = async (req, res, next) => {
   try {
     const invoices = await ProformaInvoice.find()
       .populate('customer_id')
-      .sort({ createdAt: -1 })
+      .sort({ updatedAt: -1, createdAt: -1 })
       .lean();
 
     const formatted = invoices.map(p => ({
@@ -62,59 +160,65 @@ exports.getProformaInvoiceById = async (req, res, next) => {
       return res.status(404).json([]);
     }
 
-    const rows = p.items.map(item => ({
-      performainvoice_id: p._id,
-      invoice_date: p.invoice_date,
-      subtotal: p.subtotal,
-      total_tax: p.total_tax,
-      total_cgst: p.total_cgst,
-      total_sgst: p.total_sgst,
-      total_discount: p.total_discount,
-      grand_total: p.grand_total,
-      reference_no: p.reference_no,
-      from_address_id: p.from_address_id?._id || null,
-      from_address_custom: p.from_address_custom,
-      resolved_from_address: p.from_address_custom || p.from_address_id?.address || '',
-      client_company: p.client_company,
-      client_address1: p.client_address1,
-      client_address2: p.client_address2,
-      client_city: p.client_city,
-      client_state: p.client_state,
-      client_pincode: p.client_pincode,
-      client_country: p.client_country,
-      client_gstin: p.client_gstin,
-      tax_type: p.tax_type,
-      custom_tax: p.custom_tax,
-      exec_name: p.exec_name,
-      exec_phone: p.exec_phone,
-      exec_email: p.exec_email,
-      terms_general: p.terms_general ? 1 : 0,
-      terms_tax: p.terms_tax ? 1 : 0,
-      terms_project_period: p.terms_project_period,
-      terms_validity: p.terms_validity ? 1 : 0,
-      terms_separate_orders: p.terms_separate_orders,
-      terms_payment: p.terms_payment,
-      terms_payment_custom: p.terms_payment_custom,
-      terms_warranty: p.terms_warranty,
-      validity: p.validity,
-      terms_json: p.terms_json,
-      customer_name: p.customer_id?.customer_name || '',
-      mobile_number: p.customer_id?.mobile_number || '',
-      email: p.customer_id?.email || '',
-      location_city: p.customer_id?.location_city || '',
-      product_number: item.product_number,
-      description: item.description,
-      brand_model: item.brand_model,
-      uom: item.uom,
-      price: item.price,
-      quantity: item.quantity,
-      tax: item.tax,
-      discount: item.discount,
-      item_subtotal: item.subtotal,
-      hsn_code: item.hsn_code
-    }));
+    res.status(200).json(mapProformaRows(p));
+  } catch (error) {
+    next(error);
+  }
+};
 
-    res.status(200).json(rows);
+// GET revision list for a proforma invoice
+exports.getProformaRevisions = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const p = await ProformaInvoice.findById(id).lean();
+    if (!p) return res.status(404).json({ message: "Proforma Invoice not found" });
+
+    const revisions = (p.revisions || [])
+      .slice()
+      .sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt))
+      .map(r => ({
+        id: r._id,
+        revision_no: r.revision_no,
+        savedAt: r.savedAt,
+        reference_no: r.data?.reference_no || p.reference_no,
+        grand_total: r.data?.grand_total ?? p.grand_total,
+        customer_name: r.data?._customer?.customer_name || '',
+        invoice_date: r.data?.invoice_date || null
+      }));
+
+    res.status(200).json(revisions);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET a single proforma revision (flat rows format, same as getProformaInvoiceById)
+exports.getProformaRevisionById = async (req, res, next) => {
+  try {
+    const { id, revisionId } = req.params;
+    const p = await ProformaInvoice.findById(id).lean();
+    if (!p) return res.status(404).json([]);
+
+    const rev = (p.revisions || []).find(r => String(r._id) === String(revisionId));
+    if (!rev) return res.status(404).json([]);
+
+    const doc = { _id: p._id, ...p, ...rev.data };
+    res.status(200).json(mapProformaRows(doc));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE a proforma revision
+exports.deleteProformaRevision = async (req, res, next) => {
+  try {
+    const { id, revisionId } = req.params;
+    const p = await ProformaInvoice.findById(id);
+    if (!p) return res.status(404).json({ message: "Proforma Invoice not found" });
+
+    p.revisions = (p.revisions || []).filter(r => String(r._id) !== String(revisionId));
+    await p.save();
+    res.status(200).json({ message: "Revision deleted successfully" });
   } catch (error) {
     next(error);
   }
@@ -229,6 +333,15 @@ exports.updateProformaInvoice = async (req, res, next) => {
       await dbCustomer.save();
     }
 
+    // Preserve previous version as a revision before overwriting
+    const prevMaxRev = (dbInvoice.revisions || []).reduce((m, r) => Math.max(m, r.revision_no || 0), 0);
+    dbInvoice.revisions = dbInvoice.revisions || [];
+    dbInvoice.revisions.push({
+      revision_no: prevMaxRev + 1,
+      savedAt: new Date(),
+      data: makeProformaSnapshot(dbInvoice, dbCustomer)
+    });
+
     dbInvoice.invoice_date = performaInvoice.invoice_date;
     dbInvoice.subtotal = performaInvoice.subtotal || 0;
     dbInvoice.total_tax = performaInvoice.total_tax || 0;
@@ -297,26 +410,38 @@ exports.deleteProformaInvoice = async (req, res, next) => {
 exports.sendEmail = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { to, subject } = req.body;
+    const { to, subject, revisionId } = req.body;
 
     const inv = await ProformaInvoice.findById(id).populate('customer_id').populate('from_address_id').lean();
     if (!inv) {
       return res.status(404).json({ message: "Proforma Invoice not found" });
     }
 
-    const recipientEmail = to || inv.customer_id?.email;
+    // If a specific revision is requested, send that version instead of the current one
+    let doc = inv;
+    if (revisionId) {
+      const rev = (inv.revisions || []).find(r => String(r._id) === String(revisionId));
+      if (rev) doc = { ...inv, ...rev.data };
+    }
+
+    const cInfo = customerInfo(doc);
+    doc.mobile_number = cInfo.mobile_number;
+    doc.email = cInfo.email;
+    doc.customer_name = cInfo.customer_name;
+
+    const recipientEmail = to || cInfo.email;
     if (!recipientEmail) {
       return res.status(400).json({ message: "No email address provided" });
     }
 
     const pdfBuffer = await generateInvoicePdf({ 
-      invoice: inv, 
-      items: inv.items, 
+      invoice: doc, 
+      items: doc.items, 
       type: "performa" 
     });
 
-    const year = new Date(inv.invoice_date).getFullYear();
-    const piNumber = inv.reference_no || `PI-${year}-${String(inv._id).slice(-3)}`;
+    const year = new Date(doc.invoice_date).getFullYear();
+    const piNumber = doc.reference_no || `PI-${year}-${String(doc._id).slice(-3)}`;
 
     const transporter = nodemailer.createTransport({
       service: "gmail",

@@ -30,7 +30,7 @@ const DB = "linear-gradient(135deg,#003366 0%,#004d99 100%)";
 const BD = "1.5px solid #C8D8E8";
 const F = "'Segoe UI',Arial,sans-serif";
 
-const Invoice = ({ performaInvoiceId, quotationId }) => {
+const Invoice = ({ performaInvoiceId, quotationId, revisionId }) => {
   const [rows, setRows] = useState([]);
   const [error, setError] = useState(null);
   const [signTime] = useState(() => {
@@ -38,8 +38,14 @@ const Invoice = ({ performaInvoiceId, quotationId }) => {
   });
 
   const getConfig = () => {
-    if (performaInvoiceId) return { api: `/performainvoice/${performaInvoiceId}`, label: "PROFORMA INVOICE", prefix: "PI", dateField: "invoice_date", idField: "performainvoice_id" };
-    if (quotationId) return { api: `/crm-quotations/${quotationId}`, label: "QUOTATION", prefix: "QT", dateField: "quotation_date", idField: "quotation_id" };
+    if (performaInvoiceId) {
+      const base = `/performainvoice/${performaInvoiceId}`;
+      return { api: revisionId ? `${base}/revisions/${revisionId}` : base, label: "PROFORMA INVOICE", prefix: "PI", dateField: "invoice_date", idField: "performainvoice_id" };
+    }
+    if (quotationId) {
+      const base = `/crm-quotations/${quotationId}`;
+      return { api: revisionId ? `${base}/revisions/${revisionId}` : base, label: "QUOTATION", prefix: "QT", dateField: "quotation_date", idField: "quotation_id" };
+    }
     return null;
   };
   const config = getConfig();
@@ -48,7 +54,7 @@ const Invoice = ({ performaInvoiceId, quotationId }) => {
     if (!config) return;
     setError(null);
     api.get(config.api).then(r => setRows(r.data)).catch(e => setError(e?.response?.data?.message || e?.message || "Failed"));
-  }, [performaInvoiceId, quotationId]); // eslint-disable-line
+  }, [performaInvoiceId, quotationId, revisionId]); // eslint-disable-line
 
   if (error) return <p style={{ padding: "2rem", color: "red", textAlign: "center" }}>{error}</p>;
   if (!rows.length) return <p style={{ padding: "2rem", color: "#666", textAlign: "center" }}>Loading…</p>;
@@ -60,7 +66,12 @@ const Invoice = ({ performaInvoiceId, quotationId }) => {
   const docId = h[config.idField] || h.id;
   const year = docDate ? new Date(docDate).getFullYear() : new Date().getFullYear();
   const docNum = h.reference_no || `${config.prefix}-${year}-${String(docId).slice(-4)}`;
-  const taxRate = h.tax_type === "GST5" ? 5 : h.tax_type === "CUSTOM" ? (Number(h.custom_tax) || 0) : 18;
+  const taxRate = h.tax_type === "GST0" ? 0
+    : h.tax_type === "GST5" ? 5
+    : h.tax_type === "CUSTOM" ? (Number(h.custom_tax) || 0)
+    : 18;
+  const showTax = taxRate > 0;
+  const showHsn = rows.some(r => r.hsn_code && String(r.hsn_code).trim() !== "");
   const addr = [h.client_address1, h.client_address2, h.client_city, h.client_state, h.client_pincode].filter(Boolean).join(", ");
 
   let terms = [];
@@ -79,6 +90,29 @@ const Invoice = ({ performaInvoiceId, quotationId }) => {
   const totSgst = Number(h.total_sgst) || 0;
   const grandTotal = Number(h.grand_total) || 0;
   const amtWords = numberToWords(Math.round(grandTotal)).toUpperCase() + " ONLY";
+
+  // Build dynamic column layout based on tax config and HSN data
+  const colDefs = [];
+  colDefs.push({ w: 4, align: "center" });
+  if (showHsn) colDefs.push({ w: 9, align: "center" });
+  colDefs.push({ w: 0, flex: true, align: "left" }); // Description (takes remaining width)
+  colDefs.push({ w: 9, align: "center" }); // Qty
+  colDefs.push({ w: 12, align: "right" }); // Rate
+  if (showTax) colDefs.push({ w: 7, align: "center" }); // GST
+  if (showTax) colDefs.push({ w: 12, align: "right" }); // Tax Val
+  colDefs.push({ w: 15, align: "right" }); // Amount
+  const fixedSum = colDefs.filter(c => c.w).reduce((s, c) => s + c.w, 0);
+  colDefs.forEach(c => { if (c.flex) c.w = 100 - fixedSum; });
+
+  const colLabels = [];
+  colLabels.push("#");
+  if (showHsn) colLabels.push("HSN");
+  colLabels.push("Description");
+  colLabels.push("Qty");
+  colLabels.push("Rate (₹)");
+  if (showTax) colLabels.push("GST");
+  if (showTax) colLabels.push("Tax Val");
+  colLabels.push("Amount (₹)");
 
   /* ── Blue header band ── */
   const Band = ({ children, style = {} }) => (
@@ -163,34 +197,32 @@ const Invoice = ({ performaInvoiceId, quotationId }) => {
         <div style={{ borderBottom: BD, flexShrink: 0 }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "8pt", tableLayout: "fixed" }}>
             <colgroup>
-              <col style={{ width: "4%" }} /><col style={{ width: "9%" }} /><col style={{ width: "31%" }} />
-              <col style={{ width: "9%" }} /><col style={{ width: "12%" }} /><col style={{ width: "7%" }} />
-              <col style={{ width: "13%" }} /><col style={{ width: "15%" }} />
+              {colDefs.map((c, i) => <col key={i} style={{ width: `${c.w}%` }} />)}
             </colgroup>
             <thead>
               <tr style={{ background: DB, color: "#fff" }}>
-                {["#", "HSN", "Description", "Qty", "Rate (₹)", "GST", "Tax Val", "Amount (₹)"].map((lbl, i) => (
+                {colDefs.map((c, i) => (
                   <th key={i} style={{
                     padding: "8px 6px", fontSize: "7.5pt", fontWeight: "700",
-                    textAlign: ["#", "HSN", "Qty", "GST"].includes(lbl) ? "center" : lbl === "Description" ? "left" : "right"
+                    textAlign: c.align
                   }}>
-                    {lbl}
+                    {colLabels[i]}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {rows.map((item, i) => {
-                const iTax = Number(item.tax || taxRate || 18), iQty = Number(item.quantity || 1), iRate = Number(item.price || 0);
+                const iTax = Number(item.tax || taxRate || 0), iQty = Number(item.quantity || 1), iRate = Number(item.price || 0);
                 return (
                   <tr key={i} style={{ background: i % 2 === 0 ? "#fff" : "#F7FAFC", borderBottom: "1px solid #eee" }}>
                     <td style={{ padding: "7px 6px", textAlign: "center", borderRight: "1px solid #eee", color: "#777" }}>{i + 1}</td>
-                    <td style={{ padding: "7px 6px", textAlign: "center", borderRight: "1px solid #eee", fontSize: "7.5pt" }}>{item.hsn_code || "—"}</td>
-                    <td style={{ padding: "7px 8px", borderRight: "1px solid #eee", fontWeight: "600" }}>{item.description}</td>
+                    {showHsn && <td style={{ padding: "7px 6px", textAlign: "center", borderRight: "1px solid #eee", fontSize: "7.5pt" }}>{item.hsn_code || "—"}</td>}
+                    <td style={{ padding: "7px 8px", borderRight: "1px solid #eee", fontWeight: "600", textAlign: "left" }}>{item.description}</td>
                     <td style={{ padding: "7px 6px", textAlign: "center", borderRight: "1px solid #eee" }}>{iQty} {item.uom || "Nos"}</td>
                     <td style={{ padding: "7px 8px", textAlign: "right", borderRight: "1px solid #eee" }}>{fmtN(iRate)}</td>
-                    <td style={{ padding: "7px 6px", textAlign: "center", borderRight: "1px solid #eee" }}>{iTax}%</td>
-                    <td style={{ padding: "7px 8px", textAlign: "right", borderRight: "1px solid #eee" }}>{fmtN(iQty * iRate * (iTax / 100))}</td>
+                    {showTax && <td style={{ padding: "7px 6px", textAlign: "center", borderRight: "1px solid #eee" }}>{iTax}%</td>}
+                    {showTax && <td style={{ padding: "7px 8px", textAlign: "right", borderRight: "1px solid #eee" }}>{fmtN(iQty * iRate * (iTax / 100))}</td>}
                     <td style={{ padding: "7px 8px", textAlign: "right", fontWeight: "600" }}>{fmtN(iQty * iRate)}</td>
                   </tr>
                 );
@@ -204,8 +236,8 @@ const Invoice = ({ performaInvoiceId, quotationId }) => {
           <div style={{ width: "42%", fontSize: "8pt" }}>
             {[["Subtotal", fmtN(subtotal), false],
             ...(totDisc > 0 ? [["Discount", `-${fmtN(totDisc)}`, true]] : []),
-            [`CGST (${taxRate / 2}%)`, fmtN(totCgst), false],
-            [`SGST (${taxRate / 2}%)`, fmtN(totSgst), false],
+            ...(showTax ? [[`CGST (${taxRate / 2}%)`, fmtN(totCgst), false],
+            [`SGST (${taxRate / 2}%)`, fmtN(totSgst), false]] : []),
             ].map(([l, v, d], i) => (
               <div key={i} style={{
                 display: "flex", justifyContent: "space-between",

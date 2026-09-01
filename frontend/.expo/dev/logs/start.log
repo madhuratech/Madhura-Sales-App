@@ -86368,6 +86368,7 @@
 {"_e":"metro:client_log","_t":1786510415273,"level":"log","data":["Mobile connected to Socket.io"]}
 {"_e":"metro:client_log","_t":1786510416190,"level":"log","data":["Mobile connected to Socket.io"]}
 >>>>>>> 7d4c699cf820a56f667ee1df47de8a072430359d
+<<<<<<< HEAD
 {"_e":"root:init","_t":1788264362381,"format":"v0-jsonl","version":"56.1.20"}
 {"_e":"env:mode","_t":1788264362385,"nodeEnv":"development","babelEnv":"development","mode":"development"}
 {"_e":"env:load","_t":1788264362395,"mode":"development","files":[],"env":{}}
@@ -86826,3 +86827,476 @@
 {"_e":"metro:client_log","_t":1788264626288,"level":"log","data":["API_URL:","https://madhura-sales-app-p8zp.onrender.com/api","| Fallback:","https://madhura-sales-app-p8zp.onrender.com/api"]}
 {"_e":"metro:client_log","_t":1788264631899,"level":"log","data":["API_URL:","https://madhura-sales-app-p8zp.onrender.com/api","| Fallback:","https://madhura-sales-app-p8zp.onrender.com/api"]}
 {"_e":"metro:client_log","_t":1788264670075,"level":"log","data":["API_URL:","https://madhura-sales-app-p8zp.onrender.com/api","| Fallback:","https://madhura-sales-app-p8zp.onrender.com/api"]}
+=======
+{"_e":"root:init","_t":1786534401490,"format":"v0-jsonl","version":"56.1.20"}
+{"_e":"env:mode","_t":1786534401492,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1786534401495,"mode":"development","files":[],"env":{}}
+{"_e":"devserver:start","_t":1786534402082,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../..\\..\\app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1786534402740,"serverRoot":"../..\\..","projectRoot":"../..\\..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"metro:instantiate","_t":1786534409773,"atlas":false,"workers":8,"host":"::","port":8081}
+{"_e":"metro:bundling:started","_t":1786534423277,"id":"2","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1786534423278,"id":"2","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534423298,"id":"2","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534423402,"id":"2","progress":0.17899408284023668,"total":26,"current":11}
+{"_e":"metro:bundling:progress","_t":1786534423525,"id":"2","progress":0.17899408284023668,"total":51,"current":16}
+{"_e":"metro:bundling:progress","_t":1786534423626,"id":"2","progress":0.17899408284023668,"total":209,"current":48}
+{"_e":"metro:bundling:progress","_t":1786534423729,"id":"2","progress":0.17899408284023668,"total":285,"current":96}
+{"_e":"metro:bundling:progress","_t":1786534423828,"id":"2","progress":0.2109586262844781,"total":344,"current":158}
+{"_e":"metro:bundling:progress","_t":1786534423928,"id":"2","progress":0.30182136869379667,"total":486,"current":267}
+{"_e":"metro:bundling:progress","_t":1786534424028,"id":"2","progress":0.3469101927447184,"total":545,"current":321}
+{"_e":"metro:bundling:progress","_t":1786534424128,"id":"2","progress":0.4789587107478794,"total":643,"current":445}
+{"_e":"metro:bundling:progress","_t":1786534424228,"id":"2","progress":0.4918198684432451,"total":693,"current":486}
+{"_e":"metro:bundling:progress","_t":1786534424328,"id":"2","progress":0.4918198684432451,"total":733,"current":511}
+{"_e":"metro:bundling:progress","_t":1786534424428,"id":"2","progress":0.6182357404919208,"total":758,"current":596}
+{"_e":"metro:bundling:progress","_t":1786534424565,"id":"2","progress":0.6570821854912763,"total":792,"current":642}
+{"_e":"metro:bundling:progress","_t":1786534424666,"id":"2","progress":0.6570821854912763,"total":839,"current":667}
+{"_e":"metro:bundling:progress","_t":1786534424766,"id":"2","progress":0.6818470742679833,"total":878,"current":725}
+{"_e":"metro:bundling:progress","_t":1786534424868,"id":"2","progress":0.7722681359044995,"total":924,"current":812}
+{"_e":"metro:bundling:progress","_t":1786534424966,"id":"2","progress":0.7722681359044995,"total":982,"current":860}
+{"_e":"metro:bundling:progress","_t":1786534425066,"id":"2","progress":0.7725751397320798,"total":1041,"current":915}
+{"_e":"metro:bundling:progress","_t":1786534425166,"id":"2","progress":0.8621217333129872,"total":1077,"current":1000}
+{"_e":"metro:bundling:progress","_t":1786534425266,"id":"2","progress":0.8621217333129872,"total":1124,"current":1030}
+{"_e":"metro:bundling:progress","_t":1786534425367,"id":"2","progress":0.8856183896736384,"total":1137,"current":1070}
+{"_e":"metro:bundling:progress","_t":1786534425468,"id":"2","progress":0.91183450691247,"total":1153,"current":1101}
+{"_e":"metro:bundling:progress","_t":1786534425575,"id":"2","progress":0.9526294802026647,"total":1168,"current":1140}
+{"_e":"metro:bundling:progress","_t":1786534426454,"id":"2","progress":0.9543014930099456,"total":1168,"current":1141}
+{"_e":"metro:bundling:started","_t":1786534426552,"id":"3","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1786534426552,"id":"2","progress":0.9543014930099456,"total":1168,"current":1141}
+{"_e":"metro:bundling:progress","_t":1786534426552,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534426556,"id":"2","progress":0.9559749718521298,"total":1168,"current":1142}
+{"_e":"metro:bundling:progress","_t":1786534426558,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534426675,"id":"2","progress":0.9593607603319575,"total":1169,"current":1145}
+{"_e":"metro:bundling:progress","_t":1786534426675,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534426772,"id":"2","progress":0.9610372314152095,"total":1169,"current":1146}
+{"_e":"metro:bundling:progress","_t":1786534426772,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534426873,"id":"2","progress":0.9627151660262513,"total":1169,"current":1147}
+{"_e":"metro:bundling:progress","_t":1786534426873,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534426983,"id":"2","progress":0.964394564165083,"total":1169,"current":1148}
+{"_e":"metro:bundling:progress","_t":1786534426984,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534427084,"id":"2","progress":0.9644247205785667,"total":1170,"current":1149}
+{"_e":"metro:bundling:progress","_t":1786534427084,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534427193,"id":"2","progress":0.9679481061131936,"total":1176,"current":1157}
+{"_e":"metro:bundling:progress","_t":1786534427194,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534427351,"id":"2","progress":0.9713457818927076,"total":1178,"current":1161}
+{"_e":"metro:bundling:progress","_t":1786534427351,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534427450,"id":"2","progress":0.9731780875571934,"total":1185,"current":1169}
+{"_e":"metro:bundling:progress","_t":1786534427450,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534427554,"id":"2","progress":0.9798493831116807,"total":1185,"current":1173}
+{"_e":"metro:bundling:progress","_t":1786534427554,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534427648,"id":"2","progress":0.9815207676832417,"total":1185,"current":1174}
+{"_e":"metro:bundling:progress","_t":1786534427648,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534427762,"id":"2","progress":0.9815672153635115,"total":1188,"current":1177}
+{"_e":"metro:bundling:progress","_t":1786534427765,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534427880,"id":"2","progress":0.9849185235276268,"total":1189,"current":1180}
+{"_e":"metro:bundling:progress","_t":1786534427880,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534428126,"id":"2","progress":0.9849185235276268,"total":1190,"current":1180}
+{"_e":"metro:bundling:progress","_t":1786534428126,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534428263,"id":"2","progress":0.9849185235276268,"total":2942,"current":1180}
+{"_e":"metro:bundling:progress","_t":1786534428263,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534428268,"id":"2","progress":0.9849185235276268,"total":2942,"current":1181}
+{"_e":"metro:bundling:progress","_t":1786534428268,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534428368,"id":"2","progress":0.9849185235276268,"total":2949,"current":1188}
+{"_e":"metro:bundling:progress","_t":1786534428369,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534428557,"id":"2","progress":0.9849185235276268,"total":2949,"current":1189}
+{"_e":"metro:bundling:progress","_t":1786534428557,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534428786,"id":"2","progress":0.9849185235276268,"total":2949,"current":1190}
+{"_e":"metro:bundling:progress","_t":1786534428786,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534428886,"id":"2","progress":0.9849185235276268,"total":2949,"current":1692}
+{"_e":"metro:bundling:progress","_t":1786534428886,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534428986,"id":"2","progress":0.9849185235276268,"total":2949,"current":2360}
+{"_e":"metro:bundling:progress","_t":1786534428986,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534429093,"id":"2","progress":0.9918919253422713,"total":2954,"current":2942}
+{"_e":"metro:bundling:progress","_t":1786534429093,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534429236,"id":"2","progress":0.9925663376466689,"total":2954,"current":2943}
+{"_e":"metro:bundling:progress","_t":1786534429236,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534429368,"id":"2","progress":0.997970573835966,"total":2955,"current":2952}
+{"_e":"metro:bundling:progress","_t":1786534429368,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1786534429596,"id":"2","total":2955,"ms":6318.511}
+{"_e":"metro:bundling:progress","_t":1786534429597,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534429597,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786534429600,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1786534429743,"id":"3","total":1,"ms":3190.8195}
+{"_e":"metro:client_log","_t":1786534430140,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools","font-weight:bold"]}
+{"_e":"metro:client_log","_t":1786534430141,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1786534430146,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
+{"_e":"metro:client_log","_t":1786534430166,"level":"log","data":["API_URL:","http://localhost:5005/api","| Fallback:","https://madhura-sales-app-p8zp.onrender.com/api"]}
+{"_e":"metro:client_log","_t":1786534430342,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"metro:client_log","_t":1786534459109,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:client_log","_t":1786534460042,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:bundling:started","_t":1786534640511,"id":"8","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1786534640511,"id":"8","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1786534640677,"id":"8","total":1,"ms":166.4805}
+{"_e":"metro:client_log","_t":1786534641153,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools","font-weight:bold"]}
+{"_e":"metro:client_log","_t":1786534641153,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1786534641156,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
+{"_e":"metro:client_log","_t":1786534641166,"level":"log","data":["API_URL:","http://localhost:5005/api","| Fallback:","https://madhura-sales-app-p8zp.onrender.com/api"]}
+{"_e":"metro:client_log","_t":1786534641258,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"metro:client_log","_t":1786534642662,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:bundling:started","_t":1786534647576,"id":"d","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1786534647576,"id":"d","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1786534647719,"id":"d","total":1,"ms":143.1712}
+{"_e":"metro:client_log","_t":1786534648125,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools","font-weight:bold"]}
+{"_e":"metro:client_log","_t":1786534648126,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1786534648129,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
+{"_e":"metro:client_log","_t":1786534648139,"level":"log","data":["API_URL:","http://localhost:5005/api","| Fallback:","https://madhura-sales-app-p8zp.onrender.com/api"]}
+{"_e":"metro:client_log","_t":1786534648278,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"metro:client_log","_t":1786534649460,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:bundling:started","_t":1786534901306,"id":"i","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1786534901306,"id":"i","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1786534901460,"id":"i","total":1,"ms":153.9948}
+{"_e":"metro:client_log","_t":1786534901900,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools","font-weight:bold"]}
+{"_e":"metro:client_log","_t":1786534901900,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1786534901915,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
+{"_e":"metro:client_log","_t":1786534901951,"level":"log","data":["API_URL:","http://localhost:5005/api","| Fallback:","https://madhura-sales-app-p8zp.onrender.com/api"]}
+{"_e":"metro:client_log","_t":1786534902198,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"metro:client_log","_t":1786534902601,"level":"error","data":["API 401 ERROR DETAILS:","{\"message\": \"Not authorized, user not found\", \"success\": false}","\n\n\u001b[1mCode: api.js\u001b[22m\n\u001b[0m \u001b[90m 57 |\u001b[39m     \u001b[90m// Auto-logout on 401 (except for login requests themselves)\u001b[39m\n \u001b[90m 58 |\u001b[39m     \u001b[36mif\u001b[39m (error\u001b[33m.\u001b[39mresponse\u001b[33m?\u001b[39m\u001b[33m.\u001b[39mstatus \u001b[33m===\u001b[39m \u001b[35m401\u001b[39m \u001b[33m&&\u001b[39m config\u001b[33m.\u001b[39murl \u001b[33m&&\u001b[39m \u001b[33m!\u001b[39mconfig\u001b[33m.\u001b[39murl\u001b[33m.\u001b[39mincludes(\u001b[32m'/auth/login'\u001b[39m)) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 59 |\u001b[39m       console\u001b[33m.\u001b[39merror(\u001b[32m'API 401 ERROR DETAILS:'\u001b[39m\u001b[33m,\u001b[39m error\u001b[33m.\u001b[39mresponse\u001b[33m.\u001b[39mdata)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 60 |\u001b[39m       \u001b[90m// User session invalid or expired\u001b[39m\n \u001b[90m 61 |\u001b[39m       \u001b[36mawait\u001b[39m \u001b[33mAsyncStorage\u001b[39m\u001b[33m.\u001b[39mremoveItem(\u001b[32m'token'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 62 |\u001b[39m       \u001b[36mawait\u001b[39m \u001b[33mAsyncStorage\u001b[39m\u001b[33m.\u001b[39mremoveItem(\u001b[32m'user'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[1mCall Stack\u001b[22m\n\u001b[90m  interceptors.response.use$argument_1 (services\\api.js:59:15)\u001b[39m\n\u001b[90m  fetchQuotations (screens\\QuotationScreen.web.jsx:86:19)\u001b[39m"]}
+{"_e":"metro:client_log","_t":1786534902641,"level":"error","data":["[AxiosError: Request failed with status code 401]","\n\n\u001b[1mCode: settle.js\u001b[22m\n\u001b[0m \u001b[90m 17 |\u001b[39m     resolve(response)\u001b[33m;\u001b[39m\n \u001b[90m 18 |\u001b[39m   } \u001b[36melse\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 19 |\u001b[39m     reject(\u001b[36mnew\u001b[39m \u001b[33mAxiosError\u001b[39m(\n \u001b[90m    |\u001b[39m            \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 20 |\u001b[39m       \u001b[32m'Request failed with status code '\u001b[39m \u001b[33m+\u001b[39m response\u001b[33m.\u001b[39mstatus\u001b[33m,\u001b[39m\n \u001b[90m 21 |\u001b[39m       response\u001b[33m.\u001b[39mstatus \u001b[33m>=\u001b[39m \u001b[35m400\u001b[39m \u001b[33m&&\u001b[39m response\u001b[33m.\u001b[39mstatus \u001b[33m<\u001b[39m \u001b[35m500\u001b[39m \u001b[33m?\u001b[39m \u001b[33mAxiosError\u001b[39m\u001b[33m.\u001b[39m\u001b[33mERR_BAD_REQUEST\u001b[39m \u001b[33m:\u001b[39m \u001b[33mAxiosError\u001b[39m\u001b[33m.\u001b[39m\u001b[33mERR_BAD_RESPONSE\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 22 |\u001b[39m       response\u001b[33m.\u001b[39mconfig\u001b[33m,\u001b[39m\u001b[0m\n\u001b[1mCall Stack\u001b[22m\n\u001b[2m\u001b[90m  settle (node_modules\\axios\\lib\\core\\settle.js:19:12)\u001b[39m\u001b[22m\n\u001b[2m\u001b[90m  onloadend (node_modules\\axios\\lib\\adapters\\xhr.js:63:15)\u001b[39m\u001b[22m"]}
+{"_e":"metro:client_log","_t":1786534902643,"level":"error","data":["API 401 ERROR DETAILS:","{\"message\": \"Not authorized, user not found\", \"success\": false}","\n\n\u001b[1mCode: api.js\u001b[22m\n\u001b[0m \u001b[90m 57 |\u001b[39m     \u001b[90m// Auto-logout on 401 (except for login requests themselves)\u001b[39m\n \u001b[90m 58 |\u001b[39m     \u001b[36mif\u001b[39m (error\u001b[33m.\u001b[39mresponse\u001b[33m?\u001b[39m\u001b[33m.\u001b[39mstatus \u001b[33m===\u001b[39m \u001b[35m401\u001b[39m \u001b[33m&&\u001b[39m config\u001b[33m.\u001b[39murl \u001b[33m&&\u001b[39m \u001b[33m!\u001b[39mconfig\u001b[33m.\u001b[39murl\u001b[33m.\u001b[39mincludes(\u001b[32m'/auth/login'\u001b[39m)) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 59 |\u001b[39m       console\u001b[33m.\u001b[39merror(\u001b[32m'API 401 ERROR DETAILS:'\u001b[39m\u001b[33m,\u001b[39m error\u001b[33m.\u001b[39mresponse\u001b[33m.\u001b[39mdata)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 60 |\u001b[39m       \u001b[90m// User session invalid or expired\u001b[39m\n \u001b[90m 61 |\u001b[39m       \u001b[36mawait\u001b[39m \u001b[33mAsyncStorage\u001b[39m\u001b[33m.\u001b[39mremoveItem(\u001b[32m'token'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 62 |\u001b[39m       \u001b[36mawait\u001b[39m \u001b[33mAsyncStorage\u001b[39m\u001b[33m.\u001b[39mremoveItem(\u001b[32m'user'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[1mCall Stack\u001b[22m\n\u001b[90m  interceptors.response.use$argument_1 (services\\api.js:59:15)\u001b[39m\n\u001b[90m  loadUnread (components\\AppLayout.jsx:180:21)\u001b[39m"]}
+{"_e":"metro:client_log","_t":1786534903506,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:bundling:failed","_t":1786535754153,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535754161,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535757860,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535757865,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535762429,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535762433,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535766398,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535766401,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535777769,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535777776,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535782633,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535782636,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535786554,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535786557,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535790609,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535790613,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535795636,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535795641,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535800315,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535800336,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535803703,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535803713,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535807561,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535807564,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535811466,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535811473,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535815153,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535815157,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535819855,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535819860,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535831109,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535831122,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535836095,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535836098,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535840038,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535840041,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535844672,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535844677,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535850856,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535850876,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535855280,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535855284,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535859513,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535859517,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535863276,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535863279,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535867590,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535867593,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535871765,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535871769,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535875544,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535875546,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535884958,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535884973,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535894139,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535894144,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535899422,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"","importStack":null,"filename":"screens\\QuotationScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535899432,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\QuotationScreen.web.jsx: Unexpected token, expected \",\" (627:8)\n\n  625 |             </div>\n  626 |           </div>\n> 627 |         {/* Drafts Modal */}\n      |         ^\n  628 |         <DraftModal\n  629 |           open={showDrafts}\n  630 |           title=\"Quotations\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535931033,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\ProformaInvoiceScreen.web.jsx: Unexpected token, expected \",\" (698:8)\n\n  696 |             </div>\n  697 |           </div>\n> 698 |         {/* Drafts Modal */}\n      |         ^\n  699 |         <DraftModal\n  700 |           open={showDrafts}\n  701 |           title=\"Proforma Invoices\"","importStack":null,"filename":"screens\\ProformaInvoiceScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535931036,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\ProformaInvoiceScreen.web.jsx: Unexpected token, expected \",\" (698:8)\n\n  696 |             </div>\n  697 |           </div>\n> 698 |         {/* Drafts Modal */}\n      |         ^\n  699 |         <DraftModal\n  700 |           open={showDrafts}\n  701 |           title=\"Proforma Invoices\"]"]}
+{"_e":"metro:bundling:failed","_t":1786535939634,"id":null,"message":"SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\InvoiceScreen.web.jsx: Unexpected token, expected \",\" (756:8)\n\n  754 |             </div>\n  755 |           </div>\n> 756 |         {/* Drafts Modal */}\n      |         ^\n  757 |         <DraftModal\n  758 |           open={showDrafts}\n  759 |           title=\"Tax Invoices\"","importStack":null,"filename":"screens\\InvoiceScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1786535939644,"level":"error","data":["[TransformError: SyntaxError: D:\\Auronesh_crm\\Madhura-Sales-App\\frontend\\screens\\InvoiceScreen.web.jsx: Unexpected token, expected \",\" (756:8)\n\n  754 |             </div>\n  755 |           </div>\n> 756 |         {/* Drafts Modal */}\n      |         ^\n  757 |         <DraftModal\n  758 |           open={showDrafts}\n  759 |           title=\"Tax Invoices\"]"]}
+{"_e":"root:init","_t":1786596326870,"format":"v0-jsonl","version":"56.1.20"}
+{"_e":"env:mode","_t":1786596326960,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1786596327170,"mode":"development","files":[],"env":{}}
+{"_e":"devserver:start","_t":1786596414060,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../..\\..\\app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1786596496122,"serverRoot":"../..\\..","projectRoot":"../..\\..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"metro:instantiate","_t":1786596586130,"atlas":false,"workers":8,"host":"::","port":8081}
+{"_e":"metro:bundling:started","_t":1786596735148,"id":"1","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1786596735150,"id":"1","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786596735232,"id":"1","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786596735349,"id":"1","progress":0.09,"total":6,"current":3}
+{"_e":"metro:bundling:progress","_t":1786596735450,"id":"1","progress":0.1012396694214876,"total":22,"current":7}
+{"_e":"metro:bundling:progress","_t":1786596735550,"id":"1","progress":0.1012396694214876,"total":43,"current":13}
+{"_e":"metro:bundling:progress","_t":1786596735974,"id":"1","progress":0.12851548593805623,"total":53,"current":19}
+{"_e":"metro:bundling:progress","_t":1786596736106,"id":"1","progress":0.12851548593805623,"total":113,"current":20}
+{"_e":"metro:bundling:progress","_t":1786596736165,"id":"1","progress":0.12851548593805623,"total":113,"current":21}
+{"_e":"metro:bundling:progress","_t":1786596736267,"id":"1","progress":0.12851548593805623,"total":127,"current":31}
+{"_e":"metro:bundling:progress","_t":1786596736383,"id":"1","progress":0.12851548593805623,"total":129,"current":32}
+{"_e":"metro:bundling:progress","_t":1786596736509,"id":"1","progress":0.12851548593805623,"total":152,"current":35}
+{"_e":"metro:bundling:progress","_t":1786596736624,"id":"1","progress":0.12851548593805623,"total":196,"current":39}
+{"_e":"metro:bundling:progress","_t":1786596736777,"id":"1","progress":0.12851548593805623,"total":206,"current":44}
+{"_e":"metro:bundling:progress","_t":1786596736879,"id":"1","progress":0.12851548593805623,"total":241,"current":53}
+{"_e":"metro:bundling:progress","_t":1786596736979,"id":"1","progress":0.12851548593805623,"total":247,"current":61}
+{"_e":"metro:bundling:progress","_t":1786596737085,"id":"1","progress":0.12851548593805623,"total":255,"current":67}
+{"_e":"metro:bundling:progress","_t":1786596737194,"id":"1","progress":0.12851548593805623,"total":261,"current":78}
+{"_e":"metro:bundling:progress","_t":1786596737299,"id":"1","progress":0.12851548593805623,"total":274,"current":85}
+{"_e":"metro:bundling:progress","_t":1786596737403,"id":"1","progress":0.12851548593805623,"total":283,"current":92}
+{"_e":"metro:bundling:progress","_t":1786596737504,"id":"1","progress":0.12851548593805623,"total":293,"current":99}
+{"_e":"metro:bundling:progress","_t":1786596737606,"id":"1","progress":0.12851548593805623,"total":296,"current":103}
+{"_e":"metro:bundling:progress","_t":1786596737710,"id":"1","progress":0.1396796245281094,"total":297,"current":111}
+{"_e":"metro:bundling:progress","_t":1786596737819,"id":"1","progress":0.14282837999574952,"total":299,"current":113}
+{"_e":"metro:bundling:progress","_t":1786596737919,"id":"1","progress":0.17031997984378935,"total":315,"current":130}
+{"_e":"metro:bundling:progress","_t":1786596738020,"id":"1","progress":0.1878672277123331,"total":323,"current":140}
+{"_e":"metro:bundling:progress","_t":1786596738159,"id":"1","progress":0.1878672277123331,"total":364,"current":151}
+{"_e":"metro:bundling:progress","_t":1786596738260,"id":"1","progress":0.19126640982201842,"total":391,"current":171}
+{"_e":"metro:bundling:progress","_t":1786596738361,"id":"1","progress":0.2252226371732261,"total":413,"current":196}
+{"_e":"metro:bundling:progress","_t":1786596738462,"id":"1","progress":0.2252226371732261,"total":437,"current":206}
+{"_e":"metro:bundling:progress","_t":1786596738579,"id":"1","progress":0.2252226371732261,"total":439,"current":207}
+{"_e":"metro:bundling:progress","_t":1786596738678,"id":"1","progress":0.2252226371732261,"total":443,"current":209}
+{"_e":"metro:bundling:progress","_t":1786596738778,"id":"1","progress":0.27211352860703514,"total":462,"current":241}
+{"_e":"metro:bundling:progress","_t":1786596738880,"id":"1","progress":0.274796675900277,"total":475,"current":249}
+{"_e":"metro:bundling:progress","_t":1786596739037,"id":"1","progress":0.28118775632951387,"total":479,"current":254}
+{"_e":"metro:bundling:progress","_t":1786596739136,"id":"1","progress":0.2921840759678598,"total":481,"current":260}
+{"_e":"metro:bundling:progress","_t":1786596739237,"id":"1","progress":0.2948846076323569,"total":488,"current":265}
+{"_e":"metro:bundling:progress","_t":1786596739378,"id":"1","progress":0.32157198096371203,"total":492,"current":279}
+{"_e":"metro:bundling:progress","_t":1786596739479,"id":"1","progress":0.34202652579073395,"total":501,"current":293}
+{"_e":"metro:bundling:progress","_t":1786596739585,"id":"1","progress":0.34202652579073395,"total":513,"current":298}
+{"_e":"metro:bundling:progress","_t":1786596739702,"id":"1","progress":0.34202652579073395,"total":514,"current":299}
+{"_e":"metro:bundling:progress","_t":1786596739714,"id":"1","progress":0.34202652579073395,"total":514,"current":300}
+{"_e":"metro:bundling:progress","_t":1786596739814,"id":"1","progress":0.3454926869063574,"total":524,"current":308}
+{"_e":"metro:bundling:progress","_t":1786596739928,"id":"1","progress":0.3654441571706725,"total":531,"current":321}
+{"_e":"metro:bundling:progress","_t":1786596740040,"id":"1","progress":0.3709917355371901,"total":550,"current":335}
+{"_e":"metro:bundling:progress","_t":1786596740190,"id":"1","progress":0.3793845830707834,"total":552,"current":340}
+{"_e":"metro:bundling:progress","_t":1786596740336,"id":"1","progress":0.3824740279063076,"total":553,"current":342}
+{"_e":"metro:bundling:progress","_t":1786596740447,"id":"1","progress":0.3900769467528471,"total":570,"current":356}
+{"_e":"metro:bundling:progress","_t":1786596740551,"id":"1","progress":0.40298663933185014,"total":586,"current":372}
+{"_e":"metro:bundling:progress","_t":1786596740663,"id":"1","progress":0.41855654218407595,"total":592,"current":383}
+{"_e":"metro:bundling:progress","_t":1786596740765,"id":"1","progress":0.41881242939117014,"total":598,"current":387}
+{"_e":"metro:bundling:progress","_t":1786596741107,"id":"1","progress":0.4203361111111111,"total":600,"current":389}
+{"_e":"metro:bundling:progress","_t":1786596741220,"id":"1","progress":0.4241131070282084,"total":605,"current":394}
+{"_e":"metro:bundling:progress","_t":1786596741341,"id":"1","progress":0.4241131070282084,"total":607,"current":395}
+{"_e":"metro:bundling:progress","_t":1786596741457,"id":"1","progress":0.4241131070282084,"total":613,"current":396}
+{"_e":"metro:bundling:progress","_t":1786596741569,"id":"1","progress":0.4241131070282084,"total":614,"current":397}
+{"_e":"metro:bundling:progress","_t":1786596741671,"id":"1","progress":0.4241131070282084,"total":615,"current":400}
+{"_e":"metro:bundling:progress","_t":1786596741782,"id":"1","progress":0.4241131070282084,"total":620,"current":403}
+{"_e":"metro:bundling:progress","_t":1786596741889,"id":"1","progress":0.4295419833472064,"total":621,"current":407}
+{"_e":"metro:bundling:progress","_t":1786596741989,"id":"1","progress":0.4394647140512561,"total":623,"current":413}
+{"_e":"metro:bundling:progress","_t":1786596742110,"id":"1","progress":0.4394647140512561,"total":633,"current":416}
+{"_e":"metro:bundling:progress","_t":1786596742206,"id":"1","progress":0.46000059708027746,"total":634,"current":430}
+{"_e":"metro:bundling:progress","_t":1786596742311,"id":"1","progress":0.46000059708027746,"total":635,"current":430}
+{"_e":"metro:bundling:progress","_t":1786596742410,"id":"1","progress":0.46000059708027746,"total":643,"current":435}
+{"_e":"metro:bundling:progress","_t":1786596742562,"id":"1","progress":0.46000059708027746,"total":655,"current":443}
+{"_e":"metro:bundling:progress","_t":1786596742670,"id":"1","progress":0.4780017440223747,"total":661,"current":457}
+{"_e":"metro:bundling:progress","_t":1786596742797,"id":"1","progress":0.48557564341434445,"total":663,"current":462}
+{"_e":"metro:bundling:progress","_t":1786596742905,"id":"1","progress":0.5074416642473508,"total":664,"current":473}
+{"_e":"metro:bundling:progress","_t":1786596743029,"id":"1","progress":0.5074416642473508,"total":670,"current":474}
+{"_e":"metro:bundling:progress","_t":1786596743129,"id":"1","progress":0.5074416642473508,"total":678,"current":474}
+{"_e":"metro:bundling:progress","_t":1786596743236,"id":"1","progress":0.5074416642473508,"total":681,"current":479}
+{"_e":"metro:bundling:progress","_t":1786596743421,"id":"1","progress":0.5074416642473508,"total":684,"current":485}
+{"_e":"metro:bundling:progress","_t":1786596743530,"id":"1","progress":0.5074416642473508,"total":692,"current":489}
+{"_e":"metro:bundling:progress","_t":1786596743635,"id":"1","progress":0.5143352719110295,"total":693,"current":497}
+{"_e":"metro:bundling:progress","_t":1786596743758,"id":"1","progress":0.5143352719110295,"total":697,"current":499}
+{"_e":"metro:bundling:progress","_t":1786596743849,"id":"1","progress":0.5146055342737579,"total":697,"current":500}
+{"_e":"metro:bundling:progress","_t":1786596743963,"id":"1","progress":0.5255211369364784,"total":698,"current":506}
+{"_e":"metro:bundling:progress","_t":1786596744106,"id":"1","progress":0.5296836643377312,"total":698,"current":508}
+{"_e":"metro:bundling:progress","_t":1786596744209,"id":"1","progress":0.5380579798195417,"total":698,"current":512}
+{"_e":"metro:bundling:progress","_t":1786596744328,"id":"1","progress":0.5401618213315161,"total":698,"current":513}
+{"_e":"metro:bundling:progress","_t":1786596744438,"id":"1","progress":0.5582224489795918,"total":700,"current":523}
+{"_e":"metro:bundling:progress","_t":1786596744539,"id":"1","progress":0.5748357476290396,"total":703,"current":533}
+{"_e":"metro:bundling:progress","_t":1786596744754,"id":"1","progress":0.5981028657641101,"total":706,"current":546}
+{"_e":"metro:bundling:progress","_t":1786596744903,"id":"1","progress":0.6453668528212041,"total":717,"current":576}
+{"_e":"metro:bundling:progress","_t":1786596745004,"id":"1","progress":0.6453668528212041,"total":744,"current":592}
+{"_e":"metro:bundling:progress","_t":1786596745104,"id":"1","progress":0.6453668528212041,"total":753,"current":596}
+{"_e":"metro:bundling:progress","_t":1786596745221,"id":"1","progress":0.6453668528212041,"total":767,"current":614}
+{"_e":"metro:bundling:progress","_t":1786596745328,"id":"1","progress":0.6546280991735537,"total":770,"current":623}
+{"_e":"metro:bundling:progress","_t":1786596745428,"id":"1","progress":0.668853097488742,"total":785,"current":642}
+{"_e":"metro:bundling:progress","_t":1786596745532,"id":"1","progress":0.6721962887234288,"total":805,"current":660}
+{"_e":"metro:bundling:progress","_t":1786596745632,"id":"1","progress":0.6930867821211015,"total":818,"current":681}
+{"_e":"metro:bundling:progress","_t":1786596745834,"id":"1","progress":0.6971439343953246,"total":824,"current":688}
+{"_e":"metro:bundling:progress","_t":1786596745941,"id":"1","progress":0.7059254612502858,"total":826,"current":694}
+{"_e":"metro:bundling:progress","_t":1786596746042,"id":"1","progress":0.7103208081540627,"total":827,"current":697}
+{"_e":"metro:bundling:progress","_t":1786596746176,"id":"1","progress":0.7218915362751408,"total":838,"current":712}
+{"_e":"metro:bundling:progress","_t":1786596746277,"id":"1","progress":0.7218915362751408,"total":869,"current":730}
+{"_e":"metro:bundling:progress","_t":1786596746393,"id":"1","progress":0.7218915362751408,"total":888,"current":740}
+{"_e":"metro:bundling:progress","_t":1786596746493,"id":"1","progress":0.72515869140625,"total":896,"current":763}
+{"_e":"metro:bundling:progress","_t":1786596746646,"id":"1","progress":0.7349627253678362,"total":911,"current":781}
+{"_e":"metro:bundling:progress","_t":1786596746747,"id":"1","progress":0.7554017236519922,"total":917,"current":797}
+{"_e":"metro:bundling:progress","_t":1786596746850,"id":"1","progress":0.7557354374932942,"total":926,"current":805}
+{"_e":"metro:bundling:progress","_t":1786596747031,"id":"1","progress":0.7559805383037229,"total":927,"current":806}
+{"_e":"metro:bundling:progress","_t":1786596749469,"id":"1","progress":0.7559805383037229,"total":928,"current":806}
+{"_e":"metro:bundling:progress","_t":1786596749570,"id":"1","progress":0.7559805383037229,"total":1636,"current":806}
+{"_e":"metro:bundling:progress","_t":1786596749669,"id":"1","progress":0.7559805383037229,"total":2301,"current":806}
+{"_e":"metro:bundling:progress","_t":1786596750574,"id":"1","progress":0.7559805383037229,"total":2680,"current":807}
+{"_e":"metro:bundling:progress","_t":1786596750678,"id":"1","progress":0.7559805383037229,"total":2681,"current":813}
+{"_e":"metro:bundling:progress","_t":1786596750792,"id":"1","progress":0.7559805383037229,"total":2686,"current":824}
+{"_e":"metro:bundling:progress","_t":1786596750904,"id":"1","progress":0.7559805383037229,"total":2686,"current":825}
+{"_e":"metro:bundling:progress","_t":1786596753529,"id":"1","progress":0.7559805383037229,"total":2686,"current":826}
+{"_e":"metro:bundling:progress","_t":1786596753657,"id":"1","progress":0.7559805383037229,"total":2696,"current":827}
+{"_e":"metro:bundling:progress","_t":1786596753758,"id":"1","progress":0.7559805383037229,"total":2714,"current":846}
+{"_e":"metro:bundling:progress","_t":1786596753860,"id":"1","progress":0.7559805383037229,"total":2732,"current":888}
+{"_e":"metro:bundling:progress","_t":1786596753963,"id":"1","progress":0.7559805383037229,"total":2753,"current":900}
+{"_e":"metro:bundling:progress","_t":1786596754053,"id":"1","progress":0.7559805383037229,"total":2753,"current":901}
+{"_e":"metro:bundling:progress","_t":1786596754157,"id":"1","progress":0.7559805383037229,"total":2770,"current":917}
+{"_e":"metro:bundling:progress","_t":1786596754256,"id":"1","progress":0.7559805383037229,"total":2776,"current":1029}
+{"_e":"metro:bundling:progress","_t":1786596754356,"id":"1","progress":0.7559805383037229,"total":2776,"current":1184}
+{"_e":"metro:bundling:progress","_t":1786596754457,"id":"1","progress":0.7559805383037229,"total":2776,"current":1386}
+{"_e":"metro:bundling:progress","_t":1786596754556,"id":"1","progress":0.7559805383037229,"total":2776,"current":1556}
+{"_e":"metro:bundling:progress","_t":1786596754657,"id":"1","progress":0.7559805383037229,"total":2776,"current":1727}
+{"_e":"metro:bundling:progress","_t":1786596754756,"id":"1","progress":0.7559805383037229,"total":2776,"current":1878}
+{"_e":"metro:bundling:progress","_t":1786596754856,"id":"1","progress":0.7559805383037229,"total":2776,"current":2062}
+{"_e":"metro:bundling:progress","_t":1786596754956,"id":"1","progress":0.7559805383037229,"total":2776,"current":2212}
+{"_e":"metro:bundling:progress","_t":1786596755058,"id":"1","progress":0.7559805383037229,"total":2776,"current":2336}
+{"_e":"metro:bundling:progress","_t":1786596755156,"id":"1","progress":0.7872087271300319,"total":2776,"current":2463}
+{"_e":"metro:bundling:progress","_t":1786596755256,"id":"1","progress":0.9051027383750384,"total":2776,"current":2641}
+{"_e":"metro:bundling:progress","_t":1786596755360,"id":"1","progress":0.9287084063567733,"total":2782,"current":2681}
+{"_e":"metro:bundling:progress","_t":1786596755495,"id":"1","progress":0.9287084063567733,"total":2794,"current":2684}
+{"_e":"metro:bundling:progress","_t":1786596756100,"id":"1","progress":0.9287084063567733,"total":2794,"current":2685}
+{"_e":"metro:bundling:progress","_t":1786596756507,"id":"1","progress":0.9287084063567733,"total":2797,"current":2689}
+{"_e":"metro:bundling:progress","_t":1786596756607,"id":"1","progress":0.9287084063567733,"total":2820,"current":2712}
+{"_e":"metro:bundling:progress","_t":1786596756709,"id":"1","progress":0.9334679245465871,"total":2837,"current":2741}
+{"_e":"metro:bundling:progress","_t":1786596756818,"id":"1","progress":0.9370294458588269,"total":2844,"current":2753}
+{"_e":"metro:bundling:progress","_t":1786596756918,"id":"1","progress":0.9432250735280602,"total":2847,"current":2765}
+{"_e":"metro:bundling:progress","_t":1786596757023,"id":"1","progress":0.9460121883656509,"total":2850,"current":2772}
+{"_e":"metro:bundling:progress","_t":1786596757200,"id":"1","progress":0.9480789168476518,"total":2851,"current":2776}
+{"_e":"metro:bundling:progress","_t":1786596757314,"id":"1","progress":0.9590534877225008,"total":2852,"current":2793}
+{"_e":"metro:bundling:progress","_t":1786596757443,"id":"1","progress":0.9590534877225008,"total":2883,"current":2795}
+{"_e":"metro:bundling:progress","_t":1786596757559,"id":"1","progress":0.9590534877225008,"total":2888,"current":2808}
+{"_e":"metro:bundling:progress","_t":1786596757664,"id":"1","progress":0.9590534877225008,"total":2894,"current":2818}
+{"_e":"metro:bundling:progress","_t":1786596757816,"id":"1","progress":0.9590534877225008,"total":2899,"current":2824}
+{"_e":"metro:bundling:progress","_t":1786596757954,"id":"1","progress":0.9590534877225008,"total":2913,"current":2845}
+{"_e":"metro:bundling:progress","_t":1786596758069,"id":"1","progress":0.9599973024957779,"total":2920,"current":2861}
+{"_e":"metro:bundling:progress","_t":1786596758173,"id":"1","progress":0.9741683246665557,"total":2923,"current":2885}
+{"_e":"metro:bundling:progress","_t":1786596758274,"id":"1","progress":0.9871034778817314,"total":2937,"current":2918}
+{"_e":"metro:bundling:progress","_t":1786596758374,"id":"1","progress":0.987784301940582,"total":2938,"current":2920}
+{"_e":"metro:bundling:progress","_t":1786596758480,"id":"1","progress":0.9891965680951297,"total":2954,"current":2938}
+{"_e":"metro:bundling:progress","_t":1786596758592,"id":"1","progress":0.9891965680951297,"total":2955,"current":2938}
+{"_e":"metro:bundling:progress","_t":1786596758741,"id":"1","progress":0.9979726310332484,"total":2958,"current":2955}
+{"_e":"metro:bundling:progress","_t":1786596758855,"id":"1","progress":0.999,"total":2958,"current":2957}
+{"_e":"metro:bundling:progress","_t":1786596783384,"id":"1","progress":0.999,"total":2958,"current":2958}
+{"_e":"metro:bundling:done","_t":1786596784881,"id":"1","total":2958,"ms":49732.241}
+{"_e":"metro:client_log","_t":1786596787378,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools","font-weight:bold"]}
+{"_e":"metro:client_log","_t":1786596787382,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1786596788215,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
+{"_e":"metro:client_log","_t":1786596794302,"level":"log","data":["API_URL:","http://localhost:5005/api","| Fallback:","https://madhura-sales-app-p8zp.onrender.com/api"]}
+{"_e":"metro:client_log","_t":1786596800305,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"metro:client_log","_t":1786596806955,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:client_log","_t":1786596806970,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:client_log","_t":1786596806979,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"root:init","_t":1786608522933,"format":"v0-jsonl","version":"56.1.20"}
+{"_e":"env:mode","_t":1786608522991,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1786608523107,"mode":"development","files":[],"env":{}}
+{"_e":"devserver:start","_t":1786608569660,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../..\\..\\app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1786608623024,"serverRoot":"../..\\..","projectRoot":"../..\\..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"metro:instantiate","_t":1786608700880,"atlas":false,"workers":8,"host":"::","port":8081}
+{"_e":"metro:bundling:started","_t":1786614715866,"id":"1","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1786614715873,"id":"1","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786614715942,"id":"1","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786614716065,"id":"1","progress":0.09,"total":6,"current":3}
+{"_e":"metro:bundling:progress","_t":1786614716164,"id":"1","progress":0.09,"total":21,"current":6}
+{"_e":"metro:bundling:progress","_t":1786614716375,"id":"1","progress":0.136578449905482,"total":46,"current":17}
+{"_e":"metro:bundling:progress","_t":1786614716476,"id":"1","progress":0.136578449905482,"total":149,"current":27}
+{"_e":"metro:bundling:progress","_t":1786614716576,"id":"1","progress":0.136578449905482,"total":203,"current":43}
+{"_e":"metro:bundling:progress","_t":1786614716677,"id":"1","progress":0.136578449905482,"total":215,"current":49}
+{"_e":"metro:bundling:progress","_t":1786614716817,"id":"1","progress":0.136578449905482,"total":228,"current":69}
+{"_e":"metro:bundling:progress","_t":1786614716917,"id":"1","progress":0.136578449905482,"total":244,"current":80}
+{"_e":"metro:bundling:progress","_t":1786614717022,"id":"1","progress":0.136578449905482,"total":265,"current":97}
+{"_e":"metro:bundling:progress","_t":1786614717205,"id":"1","progress":0.14282837999574952,"total":299,"current":113}
+{"_e":"metro:bundling:progress","_t":1786614717226,"id":"1","progress":0.14536750148208635,"total":299,"current":114}
+{"_e":"metro:bundling:progress","_t":1786614717326,"id":"1","progress":0.2252226371732261,"total":354,"current":168}
+{"_e":"metro:bundling:progress","_t":1786614717426,"id":"1","progress":0.22675736961451246,"total":420,"current":200}
+{"_e":"metro:bundling:progress","_t":1786614717542,"id":"1","progress":0.2392485822306238,"total":460,"current":225}
+{"_e":"metro:bundling:progress","_t":1786614717644,"id":"1","progress":0.27584563237059534,"total":476,"current":250}
+{"_e":"metro:bundling:progress","_t":1786614717743,"id":"1","progress":0.3129889918645433,"total":513,"current":287}
+{"_e":"metro:bundling:progress","_t":1786614717848,"id":"1","progress":0.3383889233750701,"total":514,"current":299}
+{"_e":"metro:bundling:progress","_t":1786614718034,"id":"1","progress":0.3447113177226814,"total":528,"current":310}
+{"_e":"metro:bundling:progress","_t":1786614718137,"id":"1","progress":0.3534247958926017,"total":545,"current":324}
+{"_e":"metro:bundling:progress","_t":1786614718236,"id":"1","progress":0.37537195000991863,"total":568,"current":348}
+{"_e":"metro:bundling:progress","_t":1786614718336,"id":"1","progress":0.38720712983685435,"total":593,"current":369}
+{"_e":"metro:bundling:progress","_t":1786614718437,"id":"1","progress":0.40359861591695495,"total":595,"current":378}
+{"_e":"metro:bundling:progress","_t":1786614718537,"id":"1","progress":0.4051423532375913,"total":630,"current":401}
+{"_e":"metro:bundling:progress","_t":1786614718639,"id":"1","progress":0.44860783571588003,"total":642,"current":430}
+{"_e":"metro:bundling:progress","_t":1786614718754,"id":"1","progress":0.47520219880256287,"total":676,"current":466}
+{"_e":"metro:bundling:progress","_t":1786614718864,"id":"1","progress":0.5380579798195417,"total":698,"current":512}
+{"_e":"metro:bundling:progress","_t":1786614718976,"id":"1","progress":0.5380579798195417,"total":729,"current":518}
+{"_e":"metro:bundling:progress","_t":1786614719079,"id":"1","progress":0.5380579798195417,"total":747,"current":546}
+{"_e":"metro:bundling:progress","_t":1786614719298,"id":"1","progress":0.5877111419727379,"total":767,"current":588}
+{"_e":"metro:bundling:progress","_t":1786614719398,"id":"1","progress":0.6477785948563098,"total":784,"current":631}
+{"_e":"metro:bundling:progress","_t":1786614719517,"id":"1","progress":0.6975690499235507,"total":801,"current":669}
+{"_e":"metro:bundling:progress","_t":1786614719620,"id":"1","progress":0.7042192976171503,"total":827,"current":694}
+{"_e":"metro:bundling:progress","_t":1786614719720,"id":"1","progress":0.7042192976171503,"total":876,"current":719}
+{"_e":"metro:bundling:progress","_t":1786614719826,"id":"1","progress":0.7042192976171503,"total":892,"current":747}
+{"_e":"metro:bundling:progress","_t":1786614719954,"id":"1","progress":0.7303848318422635,"total":908,"current":776}
+{"_e":"metro:bundling:progress","_t":1786614720056,"id":"1","progress":0.7492179521633969,"total":915,"current":792}
+{"_e":"metro:bundling:progress","_t":1786614720188,"id":"1","progress":0.7528667755186547,"total":922,"current":800}
+{"_e":"metro:bundling:progress","_t":1786614720312,"id":"1","progress":0.7781017336232854,"total":933,"current":823}
+{"_e":"metro:bundling:progress","_t":1786614720456,"id":"1","progress":0.7818881111651038,"total":933,"current":825}
+{"_e":"metro:bundling:progress","_t":1786614721361,"id":"1","progress":0.7818881111651038,"total":934,"current":825}
+{"_e":"metro:bundling:progress","_t":1786614721703,"id":"1","progress":0.7818881111651038,"total":2686,"current":825}
+{"_e":"metro:bundling:progress","_t":1786614722875,"id":"1","progress":0.7818881111651038,"total":2686,"current":826}
+{"_e":"metro:bundling:progress","_t":1786614722979,"id":"1","progress":0.7818881111651038,"total":2727,"current":884}
+{"_e":"metro:bundling:progress","_t":1786614723096,"id":"1","progress":0.7818881111651038,"total":2754,"current":898}
+{"_e":"metro:bundling:progress","_t":1786614723224,"id":"1","progress":0.7818881111651038,"total":2780,"current":928}
+{"_e":"metro:bundling:progress","_t":1786614723324,"id":"1","progress":0.7818881111651038,"total":2789,"current":1192}
+{"_e":"metro:bundling:progress","_t":1786614723424,"id":"1","progress":0.7818881111651038,"total":2789,"current":1422}
+{"_e":"metro:bundling:progress","_t":1786614723524,"id":"1","progress":0.7818881111651038,"total":2789,"current":1794}
+{"_e":"metro:bundling:progress","_t":1786614723624,"id":"1","progress":0.7818881111651038,"total":2789,"current":2226}
+{"_e":"metro:bundling:progress","_t":1786614723746,"id":"1","progress":0.9228098456196911,"total":2794,"current":2684}
+{"_e":"metro:bundling:progress","_t":1786614723926,"id":"1","progress":0.9234976114580329,"total":2794,"current":2685}
+{"_e":"metro:bundling:progress","_t":1786614724122,"id":"1","progress":0.9328162630389707,"total":2809,"current":2713}
+{"_e":"metro:bundling:progress","_t":1786614724222,"id":"1","progress":0.9390516648687824,"total":2843,"current":2755}
+{"_e":"metro:bundling:progress","_t":1786614724322,"id":"1","progress":0.9612359735189371,"total":2861,"current":2805}
+{"_e":"metro:bundling:progress","_t":1786614724423,"id":"1","progress":0.9612359735189371,"total":2913,"current":2838}
+{"_e":"metro:bundling:progress","_t":1786614724525,"id":"1","progress":0.9612359735189371,"total":2929,"current":2871}
+{"_e":"metro:bundling:progress","_t":1786614724667,"id":"1","progress":0.9898391852900227,"total":2945,"current":2930}
+{"_e":"metro:bundling:progress","_t":1786614724780,"id":"1","progress":0.9959459501187634,"total":2957,"current":2951}
+{"_e":"metro:bundling:progress","_t":1786614724888,"id":"1","progress":0.999,"total":2958,"current":2957}
+{"_e":"metro:bundling:progress","_t":1786614735668,"id":"1","progress":0.999,"total":2958,"current":2958}
+{"_e":"metro:bundling:done","_t":1786614736348,"id":"1","total":2958,"ms":20480.635}
+{"_e":"metro:client_log","_t":1786614737451,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools","font-weight:bold"]}
+{"_e":"metro:client_log","_t":1786614737453,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1786614737911,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
+{"_e":"metro:client_log","_t":1786614737912,"level":"log","data":["API_URL:","http://localhost:5005/api","| Fallback:","https://madhura-sales-app-p8zp.onrender.com/api"]}
+{"_e":"metro:client_log","_t":1786614739229,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"metro:client_log","_t":1786614762900,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:client_log","_t":1786614763923,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:client_log","_t":1786614765050,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:bundling:started","_t":1786635682159,"id":"7","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1786635682162,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635682203,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635682318,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635682430,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635682947,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635684333,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635684433,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635684535,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635684635,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635684735,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635684836,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635684936,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635685036,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635685136,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635685236,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635685336,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635685439,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635685480,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635686115,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635686174,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635686279,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635686380,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635686484,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635686618,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635686771,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635687731,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635691961,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635692061,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635692207,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635692362,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1786635692823,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1786635693062,"id":"7","total":1,"ms":10901.1712}
+{"_e":"metro:client_log","_t":1786635693676,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools","font-weight:bold"]}
+{"_e":"metro:client_log","_t":1786635693677,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1786635693986,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
+{"_e":"metro:client_log","_t":1786635693986,"level":"log","data":["API_URL:","http://localhost:5005/api","| Fallback:","https://madhura-sales-app-p8zp.onrender.com/api"]}
+{"_e":"metro:client_log","_t":1786635694190,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"metro:client_log","_t":1786635703375,"level":"log","data":["Mobile connected to Socket.io"]}
+>>>>>>> 0de516bcea90ff82573e0a5115f3d2b694e01f3d

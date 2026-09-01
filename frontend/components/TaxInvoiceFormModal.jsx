@@ -1,5 +1,5 @@
 import React from "react";
-import { PlusCircle, X, RefreshCw, Eye } from "lucide-react";
+import { PlusCircle, X, RefreshCw, Eye, FileText } from "lucide-react";
 
 const UOM_OPTIONS = ["Lumpsum", "Nos", "Units", "Pieces", "Sets", "Meters", "Kg", "Liters", "Hours"];
 const SERVICE_TYPES = ["CRM", "WEBSITE", "DM", "POSTERS"];
@@ -29,6 +29,7 @@ export default function TaxInvoiceFormModal({
   handleRefresh,
   resetForm,
   submitting,
+  onSaveDraft,
   aggregatedData,
   setItems,
 }) {
@@ -456,6 +457,13 @@ export default function TaxInvoiceFormModal({
               className="border border-gray-300 rounded-lg px-6 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50"
             >
               Cancel
+            </button>
+            <button
+              type="button"
+              onClick={onSaveDraft}
+              className="border border-[#0088CC] text-[#0088CC] hover:bg-blue-50 rounded-lg px-6 py-2.5 text-sm font-semibold flex items-center gap-2"
+            >
+              <FileText size={15} /> Save Draft
             </button>
             <button
               type="submit"

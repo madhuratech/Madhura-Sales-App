@@ -25,12 +25,109 @@ const validateQuotation = (body) => {
   return null;
 };
 
+// Resolve customer contact info from either a populated customer_id or a revision snapshot
+const customerInfo = (doc) => {
+  if (doc.customer_id && typeof doc.customer_id === 'object' && doc.customer_id.customer_name) {
+    return {
+      customer_name: doc.customer_id.customer_name,
+      mobile_number: doc.customer_id.mobile_number,
+      email: doc.customer_id.email,
+      location_city: doc.customer_id.location_city
+    };
+  }
+  if (doc._customer) {
+    return {
+      customer_name: doc._customer.customer_name || '',
+      mobile_number: doc._customer.mobile_number || '',
+      email: doc._customer.email || '',
+      location_city: doc._customer.location_city || ''
+    };
+  }
+  return { customer_name: '', mobile_number: '', email: '', location_city: '' };
+};
+
+// Map a quotation document (or revision snapshot) into flat rows (SQL join style)
+const mapQuotationRows = (q) => {
+  const c = customerInfo(q);
+  return q.items.map(item => ({
+    quotation_id: q._id,
+    invoice_date: q.quotation_date,
+    subtotal: q.subtotal,
+    total_tax: q.total_tax,
+    total_cgst: q.total_cgst,
+    total_sgst: q.total_sgst,
+    total_discount: q.total_discount,
+    grand_total: q.grand_total,
+    reference_no: q.reference_no,
+    from_address_id: q.from_address_id?._id || q.from_address_id || null,
+    from_address_custom: q.from_address_custom,
+    resolved_from_address: q.from_address_custom || q.from_address_id?.address || '',
+    client_company: q.client_company,
+    client_address1: q.client_address1,
+    client_address2: q.client_address2,
+    client_city: q.client_city,
+    client_state: q.client_state,
+    client_pincode: q.client_pincode,
+    client_country: q.client_country,
+    tax_type: q.tax_type,
+    custom_tax: q.custom_tax,
+    exec_name: q.exec_name,
+    exec_phone: q.exec_phone,
+    exec_email: q.exec_email,
+    terms_general: q.terms_general ? 1 : 0,
+    terms_tax: q.terms_tax ? 1 : 0,
+    terms_project_period: q.terms_project_period,
+    terms_validity: q.terms_validity ? 1 : 0,
+    terms_separate_orders: q.terms_separate_orders,
+    terms_payment: q.terms_payment,
+    terms_payment_custom: q.terms_payment_custom,
+    terms_warranty: q.terms_warranty,
+    validity: q.validity,
+    terms_json: q.terms_json,
+    customer_name: c.customer_name,
+    mobile_number: c.mobile_number,
+    email: c.email,
+    location_city: c.location_city,
+    product_number: item.product_number,
+    description: item.description,
+    brand_model: item.brand_model,
+    uom: item.uom,
+    price: item.price,
+    quantity: item.quantity,
+    tax: item.tax,
+    discount: item.discount,
+    item_subtotal: item.subtotal,
+    hsn_code: item.hsn_code
+  }));
+};
+
+// Build a revision snapshot of a quotation (with resolved customer contact info)
+const makeQuotationSnapshot = (doc, dbCustomer) => {
+  const obj = doc.toObject();
+  const snapshot = { ...obj };
+  snapshot._customer = dbCustomer
+    ? {
+        customer_name: dbCustomer.customer_name || '',
+        mobile_number: dbCustomer.mobile_number || '',
+        email: dbCustomer.email || '',
+        location_city: dbCustomer.location_city || ''
+      }
+    : customerInfo(doc);
+  delete snapshot._id;
+  delete snapshot.__v;
+  delete snapshot.revisions;
+  delete snapshot.createdAt;
+  delete snapshot.updatedAt;
+  delete snapshot.companyId;
+  return snapshot;
+};
+
 // GET all quotations
 exports.getQuotations = async (req, res, next) => {
   try {
     const quotations = await CrmQuotation.find()
       .populate('customer_id')
-      .sort({ createdAt: -1 })
+      .sort({ updatedAt: -1, createdAt: -1 })
       .lean();
 
     // Map to list view layout
@@ -65,59 +162,65 @@ exports.getQuotationById = async (req, res, next) => {
       return res.status(404).json([]);
     }
 
-    // Map items into flat rows format to match the frontend expectation of SQL join rows
-    const rows = q.items.map(item => ({
-      quotation_id: q._id,
-      invoice_date: q.quotation_date,
-      subtotal: q.subtotal,
-      total_tax: q.total_tax,
-      total_cgst: q.total_cgst,
-      total_sgst: q.total_sgst,
-      total_discount: q.total_discount,
-      grand_total: q.grand_total,
-      reference_no: q.reference_no,
-      from_address_id: q.from_address_id?._id || null,
-      from_address_custom: q.from_address_custom,
-      resolved_from_address: q.from_address_custom || q.from_address_id?.address || '',
-      client_company: q.client_company,
-      client_address1: q.client_address1,
-      client_address2: q.client_address2,
-      client_city: q.client_city,
-      client_state: q.client_state,
-      client_pincode: q.client_pincode,
-      client_country: q.client_country,
-      tax_type: q.tax_type,
-      custom_tax: q.custom_tax,
-      exec_name: q.exec_name,
-      exec_phone: q.exec_phone,
-      exec_email: q.exec_email,
-      terms_general: q.terms_general ? 1 : 0,
-      terms_tax: q.terms_tax ? 1 : 0,
-      terms_project_period: q.terms_project_period,
-      terms_validity: q.terms_validity ? 1 : 0,
-      terms_separate_orders: q.terms_separate_orders,
-      terms_payment: q.terms_payment,
-      terms_payment_custom: q.terms_payment_custom,
-      terms_warranty: q.terms_warranty,
-      validity: q.validity,
-      terms_json: q.terms_json,
-      customer_name: q.customer_id?.customer_name || '',
-      mobile_number: q.customer_id?.mobile_number || '',
-      email: q.customer_id?.email || '',
-      location_city: q.customer_id?.location_city || '',
-      product_number: item.product_number,
-      description: item.description,
-      brand_model: item.brand_model,
-      uom: item.uom,
-      price: item.price,
-      quantity: item.quantity,
-      tax: item.tax,
-      discount: item.discount,
-      item_subtotal: item.subtotal,
-      hsn_code: item.hsn_code
-    }));
+    res.status(200).json(mapQuotationRows(q));
+  } catch (error) {
+    next(error);
+  }
+};
 
-    res.status(200).json(rows);
+// GET revision list for a quotation
+exports.getQuotationRevisions = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const q = await CrmQuotation.findById(id).lean();
+    if (!q) return res.status(404).json({ message: "Quotation not found" });
+
+    const revisions = (q.revisions || [])
+      .slice()
+      .sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt))
+      .map(r => ({
+        id: r._id,
+        revision_no: r.revision_no,
+        savedAt: r.savedAt,
+        reference_no: r.data?.reference_no || q.reference_no,
+        grand_total: r.data?.grand_total ?? q.grand_total,
+        customer_name: r.data?._customer?.customer_name || q.customer_name || '',
+        quotation_date: r.data?.quotation_date || null
+      }));
+
+    res.status(200).json(revisions);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET a single quotation revision (flat rows format, same as getQuotationById)
+exports.getQuotationRevisionById = async (req, res, next) => {
+  try {
+    const { id, revisionId } = req.params;
+    const q = await CrmQuotation.findById(id).lean();
+    if (!q) return res.status(404).json([]);
+
+    const rev = (q.revisions || []).find(r => String(r._id) === String(revisionId));
+    if (!rev) return res.status(404).json([]);
+
+    const doc = { _id: q._id, ...q, ...rev.data };
+    res.status(200).json(mapQuotationRows(doc));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE a quotation revision
+exports.deleteQuotationRevision = async (req, res, next) => {
+  try {
+    const { id, revisionId } = req.params;
+    const q = await CrmQuotation.findById(id);
+    if (!q) return res.status(404).json({ message: "Quotation not found" });
+
+    q.revisions = (q.revisions || []).filter(r => String(r._id) !== String(revisionId));
+    await q.save();
+    res.status(200).json({ message: "Revision deleted successfully" });
   } catch (error) {
     next(error);
   }
@@ -251,6 +354,15 @@ exports.updateQuotation = async (req, res, next) => {
       await dbCustomer.save();
     }
 
+    // Preserve previous version as a revision before overwriting
+    const prevMaxRev = (dbQuotation.revisions || []).reduce((m, r) => Math.max(m, r.revision_no || 0), 0);
+    dbQuotation.revisions = dbQuotation.revisions || [];
+    dbQuotation.revisions.push({
+      revision_no: prevMaxRev + 1,
+      savedAt: new Date(),
+      data: makeQuotationSnapshot(dbQuotation, dbCustomer)
+    });
+
     // Update Quotation details
     dbQuotation.quotation_date = quotationDate;
     dbQuotation.subtotal = q.subtotal || 0;
@@ -320,29 +432,41 @@ exports.deleteQuotation = async (req, res, next) => {
 exports.sendEmail = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { to, subject } = req.body;
+    const { to, subject, revisionId } = req.body;
 
     const q = await CrmQuotation.findById(id).populate('customer_id').populate('from_address_id').lean();
     if (!q) {
       return res.status(404).json({ message: "Quotation not found" });
     }
 
-    const recipientEmail = to || q.customer_id?.email;
+    // If a specific revision is requested, send that version instead of the current one
+    let doc = q;
+    if (revisionId) {
+      const rev = (q.revisions || []).find(r => String(r._id) === String(revisionId));
+      if (rev) doc = { ...q, ...rev.data };
+    }
+
+    const cInfo = customerInfo(doc);
+    doc.mobile_number = cInfo.mobile_number;
+    doc.email = cInfo.email;
+    doc.customer_name = cInfo.customer_name;
+
+    const recipientEmail = to || cInfo.email;
     if (!recipientEmail) {
       return res.status(400).json({ message: "No email address provided" });
     }
 
     // Standardize fields for generator
-    q.invoice_date = q.quotation_date;
+    doc.invoice_date = doc.quotation_date;
 
-    const pdfBuffer = await generateInvoicePdf({ 
-      invoice: q, 
-      items: q.items, 
-      type: "quotation" 
+    const pdfBuffer = await generateInvoicePdf({
+      invoice: doc,
+      items: doc.items,
+      type: "quotation"
     });
 
-    const year = new Date(q.quotation_date).getFullYear();
-    const qtNumber = q.reference_no || `QT-${year}-${String(q._id).slice(-3)}`;
+    const year = new Date(doc.quotation_date).getFullYear();
+    const qtNumber = doc.reference_no || `QT-${year}-${String(doc._id).slice(-3)}`;
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
