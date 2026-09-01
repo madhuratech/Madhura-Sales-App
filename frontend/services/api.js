@@ -47,10 +47,9 @@ api.interceptors.response.use(
         try {
           return await api(config);
         } catch (retryErr) {
-          return { data: { success: false, data: [] } };
+          return Promise.reject(retryErr);
         }
       }
-      return { data: { success: false, data: [] } };
     }
 
     // Auto-logout on 401 (except for login requests themselves)
@@ -65,11 +64,7 @@ api.interceptors.response.use(
       }
     }
 
-    // Return safe object instead of rejecting Promise to prevent any redbox crash/error popups
-    return { 
-      data: error.response?.data || { success: false, data: [] }, 
-      status: error.response?.status || 500 
-    };
+    return Promise.reject(error);
   }
 );
 

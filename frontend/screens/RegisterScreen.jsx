@@ -141,11 +141,18 @@ export default function RegisterScreen() {
         role: finalRole,
       };
       const response = await api.post('/auth/register', payload);
-      const { user, token } = response.data;
+      const data = response?.data || {};
+      const user = data.user || data.data?.user;
+      const token = data.token || data.data?.token;
+
       setServerError('');
-      await AsyncStorage.setItem('token', token);
-      await AsyncStorage.setItem('user', JSON.stringify(user));
-      setRegisteredUser(user);
+      if (token) {
+        await AsyncStorage.setItem('token', token);
+      }
+      if (user) {
+        await AsyncStorage.setItem('user', JSON.stringify(user));
+        setRegisteredUser(user);
+      }
       
       const isAdmin = ['Admin', 'Project Manager', 'Team Lead', 'HR', 'Managing Director MD'].includes(user.role);
       

@@ -115,8 +115,12 @@ export default function LoginScreen() {
         return;
       }
 
-      await AsyncStorage.setItem('token', token);
-      await AsyncStorage.setItem('user', JSON.stringify(user));
+      if (token) {
+        await AsyncStorage.setItem('token', token);
+      }
+      if (user) {
+        await AsyncStorage.setItem('user', JSON.stringify(user));
+      }
       
       const adminRolesForCheck = ['Admin', 'Project Manager', 'Team Lead', 'HR', 'Managing Director MD'];
       const isAdminAccount = adminRolesForCheck.includes(user.role);
