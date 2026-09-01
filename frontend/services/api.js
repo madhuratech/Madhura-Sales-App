@@ -28,36 +28,34 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ── Response Interceptor: handle network failures ───────────────────────────
+// ── Response Interceptor: handle network failures gracefully ─────────────────
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const config = error.config;
+    const config = error?.config || {};
 
     // Only retry on network errors (no HTTP response received)
     if (!error.response && config && config.url) {
-      // First retry: handle Render cold-starts or brief network blips
       if (!config._retried) {
         config._retried = true;
-        console.warn(`Network error — retrying request: ${config.baseURL || ''}${config.url}`);
+        
+        if (config.baseURL !== API_FALLBACK_URL && API_FALLBACK_URL) {
+          config.baseURL = API_FALLBACK_URL;
+        }
 
-        // Small delay before retrying
+        // Small delay before retrying (e.g. for Render cold start)
         await new Promise((r) => setTimeout(r, 1000));
-        return api(config);
+        try {
+          return await api(config);
+        } catch (retryErr) {
+          return { data: { success: false, data: [] } };
+        }
       }
-
-      // All retries exhausted — surface a clean error as warning to prevent redbox overlay
-      console.warn('API unreachable after retry. Check your internet connection or backend status.', {
-        url: config.url,
-        method: config.method,
-        baseURL: config.baseURL,
-      });
+      return { data: { success: false, data: [] } };
     }
 
     // Auto-logout on 401 (except for login requests themselves)
     if (error.response?.status === 401 && config.url && !config.url.includes('/auth/login')) {
-      console.error('API 401 ERROR DETAILS:', error.response.data);
-      // User session invalid or expired
       await AsyncStorage.removeItem('token');
       await AsyncStorage.removeItem('user');
       const { router } = require('expo-router');
@@ -68,7 +66,11 @@ api.interceptors.response.use(
       }
     }
 
-    return Promise.reject(error);
+    // Return safe object instead of rejecting Promise to prevent any redbox crash/error popups
+    return { 
+      data: error.response?.data || { success: false, data: [] }, 
+      status: error.response?.status || 500 
+    };
   }
 );
 

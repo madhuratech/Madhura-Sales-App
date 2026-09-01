@@ -86368,3 +86368,11 @@
 {"_e":"metro:client_log","_t":1786510415273,"level":"log","data":["Mobile connected to Socket.io"]}
 {"_e":"metro:client_log","_t":1786510416190,"level":"log","data":["Mobile connected to Socket.io"]}
 >>>>>>> 7d4c699cf820a56f667ee1df47de8a072430359d
+{"_e":"root:init","_t":1788264362381,"format":"v0-jsonl","version":"56.1.20"}
+{"_e":"env:mode","_t":1788264362385,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1788264362395,"mode":"development","files":[],"env":{}}
+{"_e":"root:init","_t":1788264385095,"format":"v0-jsonl","version":"56.1.20"}
+{"_e":"env:mode","_t":1788264385096,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1788264385102,"mode":"development","files":[],"env":{}}
+{"_e":"devserver:start","_t":1788264386916,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../..\\..\\app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1788264390136,"serverRoot":"../..\\..","projectRoot":"../..\\..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}

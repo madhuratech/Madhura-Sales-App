@@ -40,11 +40,10 @@ const STATIC_SOCKET_URL = process.env.EXPO_PUBLIC_SOCKET_URL ||
   Constants.manifest?.extra?.EXPO_PUBLIC_SOCKET_URL;
 
 const getDevHost = () => {
-  // Use LOCAL_HOST (the Expo packager's LAN IP) for all devices, including emulators.
-  // Expo automatically whitelists LOCAL_HOST for cleartext HTTP traffic on Android,
-  // whereas 10.0.2.2 is blocked by default Android network security rules.
+  if (Platform.OS === 'web') return 'localhost';
   if (Platform.OS === 'ios' && isEmulator) return IOS_SIMULATOR_HOST;
-  return LOCAL_HOST;
+  if (Platform.OS === 'android' && isEmulator) return ANDROID_EMULATOR_HOST;
+  return HOST_FROM_DEBUGGER || ANDROID_EMULATOR_HOST || 'localhost';
 };
 
 const DEV_HOST = getDevHost();
@@ -59,7 +58,7 @@ const isDev = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV !=
 // 4. Web dev (localhost) → local IP
 // 5. Physical device in DEV mode → local IP
 // 6. Everything else (production build) → Render production
-export const API_URL = isWebProduction ? PRODUCTION_API_URL : (isDev ? DEV_API_URL : (STATIC_API_URL || PRODUCTION_API_URL));
+export const API_URL = STATIC_API_URL || PRODUCTION_API_URL;
 
 // Fallback is always the live production server
 export const API_FALLBACK_URL = PRODUCTION_API_URL;
