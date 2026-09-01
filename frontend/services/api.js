@@ -7,7 +7,6 @@ const api = axios.create({
   timeout: 60000, // 60s — enough for Render free tier cold start
 });
 
-console.log('API_URL:', API_URL, '| Fallback:', API_FALLBACK_URL);
 
 // ── Request Interceptor: attach auth token ──────────────────────────────────
 api.interceptors.request.use(
