@@ -14,9 +14,9 @@ import { useRouter } from 'expo-router';
 
 export default function SplashScreen() {
   const router = useRouter();
-  const fadeAnim = new Animated.Value(0);
-  const slideAnim = new Animated.Value(30);
-  const scaleAnim = new Animated.Value(0.5); // Initial scale for logo
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const slideAnim = React.useRef(new Animated.Value(30)).current;
+  const scaleAnim = React.useRef(new Animated.Value(0.5)).current; // Initial scale for logo
 
   useEffect(() => {
     Animated.parallel([
