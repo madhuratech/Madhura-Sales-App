@@ -1,5 +1,4 @@
 module.exports = function (api) {
-  api.cache(true);
   const plugins = [];
   
   // Robust check to see if we are building for web (Vercel)
@@ -10,6 +9,8 @@ module.exports = function (api) {
   if (!isWeb && !isExpoOSWeb) {
     plugins.push('react-native-reanimated/plugin');
   }
+
+  api.cache(true);
 
   return {
     presets: [
