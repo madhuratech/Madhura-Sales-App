@@ -1,45 +1,15 @@
 import React, { useEffect } from 'react';
-import { Ionicons } from '@expo/vector-icons';
-import {
-  View,
-  Text,
-  StyleSheet,
-  StatusBar,
-  Animated,
-  Image,
-} from 'react-native';
+import { View, Text, StyleSheet, StatusBar, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 
 export default function SplashScreen() {
   const router = useRouter();
-  const fadeAnim = React.useRef(new Animated.Value(0)).current;
-  const slideAnim = React.useRef(new Animated.Value(30)).current;
-  const scaleAnim = React.useRef(new Animated.Value(0.5)).current; // Initial scale for logo
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: false,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: false,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        friction: 3,
-        tension: 40,
-        useNativeDriver: false,
-      }),
-    ]).start();
-
     const checkAuth = async () => {
-      // Wait for animations to complete before transitioning
+      // Small delay for the splash screen to show
       await new Promise(r => setTimeout(r, 800));
       try {
         const token = await AsyncStorage.getItem('token');
@@ -67,11 +37,11 @@ export default function SplashScreen() {
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
       <View style={styles.container}>
-        <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+        <View style={styles.content}>
           <View style={styles.logoWrap}>
-            <Animated.Image 
+            <Image 
               source={require('../assets/madhura.png')} 
-              style={[styles.logoImage, { transform: [{ scale: scaleAnim }] }]} 
+              style={styles.logoImage} 
               resizeMode="contain" 
             />
           </View>
@@ -83,7 +53,7 @@ export default function SplashScreen() {
             <View style={styles.dot} />
             <View style={styles.dot} />
           </View>
-        </Animated.View>
+        </View>
 
         <Text style={styles.version}>v1.0.0</Text>
       </View>
