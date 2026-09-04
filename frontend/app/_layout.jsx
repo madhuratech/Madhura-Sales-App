@@ -1,5 +1,6 @@
 import '../global.css';
-import { Stack } from 'expo-router';
+import { Stack, ErrorBoundary } from 'expo-router';
+export { ErrorBoundary };
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { Appearance } from 'react-native';

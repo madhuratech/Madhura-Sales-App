@@ -3,7 +3,6 @@ module.exports = function (api) {
   
   const plugins = [];
   if (process.env.EXPO_OS !== 'web' && !isWeb) {
-    plugins.push('react-native-worklets-core/plugin');
     plugins.push('react-native-reanimated/plugin');
   }
 
