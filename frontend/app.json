@@ -6,9 +6,9 @@
     "scheme": "madhura-sales",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/madhura.png",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/madhura.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -22,7 +22,7 @@
     "android": {
       "userInterfaceStyle": "light",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/madhura.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.madhura.sales",
@@ -34,7 +34,7 @@
       ]
     },
     "web": {
-      "favicon": "./assets/favicon.png",
+      "favicon": "./assets/madhura.png",
       "bundler": "metro"
     },
     "plugins": [
