@@ -1,6 +1,6 @@
+import 'react-native-gesture-handler';
 import '../global.css';
-import { Stack, ErrorBoundary } from 'expo-router';
-export { ErrorBoundary };
+import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { Appearance } from 'react-native';

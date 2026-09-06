@@ -1,5 +1,7 @@
 {
   "expo": {
+    "newArchEnabled": false,
+    "jsEngine": "hermes",
     "name": "Madhura CRM",
     "slug": "madhura-sales",
     "version": "1.0.0",
