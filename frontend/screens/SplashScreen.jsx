@@ -3,11 +3,13 @@ import { View, Text, StyleSheet, StatusBar, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import * as NativeSplashScreen from 'expo-splash-screen';
 
 export default function SplashScreen() {
   const router = useRouter();
 
   useEffect(() => {
+    NativeSplashScreen.hideAsync().catch(() => {});
     const checkAuth = async () => {
       // Small delay for the splash screen to show
       await new Promise(r => setTimeout(r, 800));

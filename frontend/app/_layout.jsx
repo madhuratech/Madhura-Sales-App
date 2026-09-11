@@ -7,7 +7,11 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Toast from 'react-native-toast-message';
 import { Appearance } from 'react-native';
 import { useEffect } from 'react';
+import * as SplashScreen from 'expo-splash-screen';
 import { playNotificationSound } from '../components/AppLayout';
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
 
 export { ErrorBoundary };
 
