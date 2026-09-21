@@ -27,7 +27,9 @@ exports.getProducts = async (req, res, next) => {
       query.$or = [
         { name: new RegExp(search, 'i') },
         { hsn_sac_code: new RegExp(search, 'i') },
-        { category: new RegExp(search, 'i') }
+        { category: new RegExp(search, 'i') },
+        { lastModifiedByName: new RegExp(search, 'i') },
+        { createdByName: new RegExp(search, 'i') }
       ];
     }
     const products = await Product.find(query).sort({ createdAt: -1 });
@@ -61,9 +63,28 @@ exports.createProduct = async (req, res, next) => {
       description, category, billing_type, status
     } = req.body;
 
+    const userName = req.user?.name || req.user?.email || 'User';
+    const userRole = req.user?.role || 'Field Executive';
+    const companyId = req.user?.companyId || 'company_madhura';
+
     const product = await Product.create({
-      item_type, name, hsn_sac_code, uom, rate, gst_rate,
-      description, category, billing_type, status
+      companyId,
+      item_type,
+      name,
+      hsn_sac_code,
+      uom,
+      rate,
+      gst_rate,
+      description,
+      category,
+      billing_type,
+      status,
+      createdBy: req.user?._id,
+      createdByName: userName,
+      lastModifiedBy: req.user?._id,
+      lastModifiedByName: userName,
+      lastModifiedRole: userRole,
+      lastModifiedAt: new Date()
     });
 
     res.status(201).json({ message: 'Product created successfully', product });
@@ -88,6 +109,9 @@ exports.updateProduct = async (req, res, next) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
+    const userName = req.user?.name || req.user?.email || 'User';
+    const userRole = req.user?.role || 'Field Executive';
+
     product.item_type = item_type;
     product.name = name;
     product.hsn_sac_code = hsn_sac_code;
@@ -98,6 +122,17 @@ exports.updateProduct = async (req, res, next) => {
     product.category = category;
     product.billing_type = billing_type;
     product.status = status;
+
+    // Track user who made this edit as proof
+    product.lastModifiedBy = req.user?._id || product.lastModifiedBy;
+    product.lastModifiedByName = userName;
+    product.lastModifiedRole = userRole;
+    product.lastModifiedAt = new Date();
+
+    if (!product.createdByName) {
+      product.createdByName = userName;
+      product.createdBy = req.user?._id;
+    }
 
     await product.save();
     res.status(200).json({ message: 'Product updated successfully', product });

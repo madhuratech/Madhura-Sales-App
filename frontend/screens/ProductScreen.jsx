@@ -33,6 +33,10 @@ const initialProduct = {
   category: 'Software',
   billing_type: 'One-time',
   status: 'Active',
+  lastModifiedByName: '',
+  lastModifiedRole: '',
+  lastModifiedAt: null,
+  createdByName: '',
 };
 
 function TypePill({ selected, onClick, label, icon }) {
@@ -233,6 +237,10 @@ export default function ProductScreen() {
       category: p.category || 'Software',
       billing_type: p.billing_type || 'One-time',
       status: p.status || 'Active',
+      lastModifiedByName: p.lastModifiedByName || p.createdByName || '',
+      lastModifiedRole: p.lastModifiedRole || '',
+      lastModifiedAt: p.lastModifiedAt || p.updatedAt || '',
+      createdByName: p.createdByName || '',
     });
     setEditId(p._id);
     setShowForm(true);
@@ -345,9 +353,25 @@ export default function ProductScreen() {
         {showForm ? (
           <ScrollView contentContainerStyle={{ paddingBottom: 80 }} showsVerticalScrollIndicator={false}>
             <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 18, borderWidth: 1, borderColor: '#e2e8f0' }}>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: '#0f172a', marginBottom: 16 }}>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: '#0f172a', marginBottom: 12 }}>
                 {editId ? 'Edit Product / Service' : 'Add New Product / Service'}
               </Text>
+
+              {editId && (product.lastModifiedByName || product.createdByName) ? (
+                <View style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 12, padding: 12, marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="person-circle-outline" size={22} color="#0284c7" />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 12, color: '#1e3a8a', fontWeight: '600' }}>
+                      Last changed by: {product.lastModifiedByName || product.createdByName} {product.lastModifiedRole ? `(${product.lastModifiedRole})` : ''}
+                    </Text>
+                    {product.lastModifiedAt ? (
+                      <Text style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                        {new Date(product.lastModifiedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </Text>
+                    ) : null}
+                  </View>
+                </View>
+              ) : null}
 
               <View style={{ marginBottom: 14 }}>
                 <Text style={{ fontSize: 11, fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
@@ -615,6 +639,21 @@ export default function ProductScreen() {
                         <Ionicons name="trash-outline" size={16} color="#ef4444" />
                       </TouchableOpacity>
                     </View>
+                  </View>
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#f1f5f9' }}>
+                    <Ionicons name="person-circle-outline" size={14} color="#64748b" />
+                    <Text style={{ fontSize: 11, color: '#64748b' }} numberOfLines={1}>
+                      Last changed by:{' '}
+                      <Text style={{ fontWeight: '600', color: '#1e293b' }}>
+                        {p.lastModifiedByName || p.createdByName || 'System'}
+                      </Text>
+                      {p.lastModifiedRole ? ` (${p.lastModifiedRole})` : ''}
+                      {' • '}
+                      {p.lastModifiedAt || p.updatedAt
+                        ? new Date(p.lastModifiedAt || p.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                        : '—'}
+                    </Text>
                   </View>
                 </View>
               ))

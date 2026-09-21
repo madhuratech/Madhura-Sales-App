@@ -117,6 +117,7 @@ function buildNavSections(role) {
           { title: 'Dashboard',         screen: 'AdminDashboard',           icon: 'grid-outline',      iconActive: 'grid' },
           { title: 'Field Staff Mgmt',  screen: 'UserManagement',           icon: 'people-outline',    iconActive: 'people' },
           { title: 'Client Onboarding', screen: 'ClientOnboarding',         icon: 'briefcase-outline', iconActive: 'briefcase' },
+          { title: 'Products & Services', screen: 'Product',                icon: 'cube-outline',      iconActive: 'cube' },
         ],
       },
       {

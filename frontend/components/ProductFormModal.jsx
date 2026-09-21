@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { X, Package, Wrench } from 'lucide-react';
+import { X, Package, Wrench, UserCheck, Clock } from 'lucide-react';
 
 const UOM_OPTIONS = ['Nos', 'Hours', 'Month', 'Year'];
 const CATEGORIES = ['Software', 'SaaS', 'Website', 'Digital Product', 'Other'];
@@ -145,6 +145,34 @@ export default function ProductFormModal({ open, editId, product, setProduct, on
             <X size={20} />
           </button>
         </div>
+
+        {editId && (product.lastModifiedByName || product.createdByName) && (
+          <div className="bg-blue-50/70 border border-blue-200/80 rounded-xl px-4 py-2.5 flex items-center justify-between text-xs text-blue-950 mb-3 mt-1">
+            <div className="flex items-center gap-2">
+              <UserCheck size={16} className="text-[#0088CC] shrink-0" />
+              <span>
+                Last changed by: <strong className="font-semibold text-gray-900">{product.lastModifiedByName || product.createdByName}</strong>
+                {product.lastModifiedRole ? (
+                  <span className="ml-1.5 px-1.5 py-0.5 bg-white text-[#0088CC] border border-blue-200 rounded text-[10px] font-semibold">
+                    {product.lastModifiedRole}
+                  </span>
+                ) : null}
+              </span>
+            </div>
+            {(product.lastModifiedAt || product.createdAt) && (
+              <span className="text-gray-500 text-[11px] flex items-center gap-1">
+                <Clock size={12} className="text-gray-400" />
+                {new Date(product.lastModifiedAt || product.createdAt).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit"
+                })}
+              </span>
+            )}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* BASIC INFO */}

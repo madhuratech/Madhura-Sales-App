@@ -55,6 +55,33 @@ const productSchema = new mongoose.Schema({
     type: String,
     enum: ['Active', 'Inactive'],
     default: 'Active'
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  createdByName: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  lastModifiedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  lastModifiedByName: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  lastModifiedRole: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  lastModifiedAt: {
+    type: Date,
+    default: Date.now
   }
 }, { timestamps: true });
 

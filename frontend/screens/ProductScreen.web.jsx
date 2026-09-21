@@ -14,13 +14,32 @@ import {
   Tag,
   Filter,
   IndianRupee,
-  AlertCircle
+  AlertCircle,
+  User,
+  Clock
 } from "lucide-react";
 import api from "../services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ProductFormModal from "../components/ProductFormModal";
 
 const ALL_CATEGORIES = ['Software', 'SaaS', 'Website', 'Digital Product', 'Other'];
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return "—";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  } catch {
+    return "—";
+  }
+};
 
 const initialProductState = {
   item_type: "Product",
@@ -33,6 +52,10 @@ const initialProductState = {
   category: "Software",
   billing_type: "One-time",
   status: "Active",
+  lastModifiedByName: "",
+  lastModifiedRole: "",
+  lastModifiedAt: null,
+  createdByName: "",
 };
 
 export default function ProductScreenWeb() {
@@ -112,6 +135,11 @@ export default function ProductScreenWeb() {
       category: item.category || "Software",
       billing_type: item.billing_type || "One-time",
       status: item.status || "Active",
+      lastModifiedByName: item.lastModifiedByName || item.createdByName || "",
+      lastModifiedRole: item.lastModifiedRole || "",
+      lastModifiedAt: item.lastModifiedAt || item.updatedAt || "",
+      createdByName: item.createdByName || "",
+      createdAt: item.createdAt || "",
     });
     setEditId(item._id);
     setModalOpen(true);
@@ -195,7 +223,10 @@ export default function ProductScreenWeb() {
       (item.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.hsn_sac_code || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.category || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.description || "").toLowerCase().includes(searchTerm.toLowerCase());
+      (item.description || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.lastModifiedByName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.createdByName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.lastModifiedRole || "").toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesType = typeFilter === "All" || item.item_type === typeFilter;
     const matchesStatus = statusFilter === "All" || item.status === statusFilter;
@@ -427,6 +458,7 @@ export default function ProductScreenWeb() {
                     <th className="py-3.5 px-4 text-right">Unit Rate (₹)</th>
                     <th className="py-3.5 px-4 text-center">GST %</th>
                     <th className="py-3.5 px-4 text-center">Status</th>
+                    <th className="py-3.5 px-4">Last Changed By</th>
                     <th className="py-3.5 px-4 text-right w-24">Actions</th>
                   </tr>
                 </thead>
@@ -519,6 +551,28 @@ export default function ProductScreenWeb() {
                           />
                           {item.status}
                         </span>
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-1.5 font-semibold text-gray-800 text-xs">
+                          <div className="w-5 h-5 rounded-full bg-blue-50 text-[#0088CC] border border-blue-200 flex items-center justify-center text-[10px] font-bold">
+                            {(item.lastModifiedByName || item.createdByName || "U").charAt(0).toUpperCase()}
+                          </div>
+                          <span className="truncate max-w-[130px]" title={item.lastModifiedByName || item.createdByName || "System"}>
+                            {item.lastModifiedByName || item.createdByName || "System"}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-gray-500 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                          {item.lastModifiedRole && (
+                            <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-medium border border-slate-200">
+                              {item.lastModifiedRole}
+                            </span>
+                          )}
+                          <span className="text-gray-400 text-[10px] flex items-center gap-0.5">
+                            <Clock size={10} className="text-gray-400" />
+                            {formatDate(item.lastModifiedAt || item.updatedAt || item.createdAt)}
+                          </span>
+                        </div>
                       </td>
 
                       <td className="py-3.5 px-4 text-right">
