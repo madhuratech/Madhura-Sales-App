@@ -52,12 +52,24 @@ export default function PaymentReceiptScreenWeb() {
 
   const downloadPDFRef = useRef(null);
 
+  const [catalogProducts, setCatalogProducts] = useState([]);
+
+  const fetchCatalogProducts = async () => {
+    try {
+      const res = await api.get("/products", { params: { status: "Active" } });
+      setCatalogProducts((res.data || []).filter(p => p.status === "Active"));
+    } catch (err) {
+      console.error("Fetch catalog products error:", err);
+    }
+  };
+
   useEffect(() => {
     const load = async () => {
       const stored = await AsyncStorage.getItem('user');
       if (stored) setRole(JSON.parse(stored).role);
       fetchReceipts();
       fetchInvoices();
+      fetchCatalogProducts();
     };
     load();
   }, []);
@@ -216,8 +228,20 @@ export default function PaymentReceiptScreenWeb() {
     setItems(copy);
   };
 
-  const addItemRow = () => {
+  const addItem = () => {
     setItems(prev => [...prev, { sl_no: prev.length + 1, service_name: "", total_amount: 0, advance_amount: 0, received_amount: 0 }]);
+  };
+
+  const handleSelectProduct = (idx, prodId) => {
+    if (!prodId) return;
+    const found = catalogProducts.find(p => p._id === prodId);
+    if (found) {
+      const newItems = [...items];
+      newItems[idx].service_name = found.name;
+      newItems[idx].total_amount = Number(found.rate) || 0;
+      newItems[idx].received_amount = Number(found.rate) || 0;
+      setItems(newItems);
+    }
   };
 
   const removeItemRow = () => {
@@ -585,12 +609,26 @@ export default function PaymentReceiptScreenWeb() {
                           <tr key={idx}>
                             <td className="px-3 py-2 text-center font-bold text-gray-500">{idx + 1}</td>
                             <td className="px-4 py-2">
+                              <select
+                                value={catalogProducts.find(p => p.name.toLowerCase() === (item.service_name || "").trim().toLowerCase())?._id || ""}
+                                onChange={e => handleSelectProduct(idx, e.target.value)}
+                                className="w-full border border-gray-200 bg-blue-50/50 rounded px-2 py-1 text-[11px] mb-1 outline-none text-gray-700 font-medium cursor-pointer hover:border-[#0088CC] focus:border-[#0088CC]"
+                              >
+                                <option value="">-- Select Product / Service --</option>
+                                {catalogProducts
+                                  .filter(cp => cp.status === "Active")
+                                  .map(cp => (
+                                    <option key={cp._id} value={cp._id}>
+                                      [{cp.item_type}] {cp.name} (₹{Number(cp.rate).toLocaleString('en-IN')})
+                                    </option>
+                                  ))}
+                              </select>
                               <input
                                 type="text"
                                 required
                                 value={item.service_name}
                                 onChange={e => handleItemChange(idx, "service_name", e.target.value)}
-                                className="w-full bg-transparent border-0 border-b border-transparent hover:border-gray-200 focus:border-blue-500 outline-none py-1"
+                                className="w-full bg-transparent border-0 border-b border-transparent hover:border-gray-200 focus:border-blue-500 outline-none py-1 text-sm"
                                 placeholder="Service Description..."
                               />
                             </td>

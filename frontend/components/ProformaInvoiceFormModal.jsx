@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { PlusCircle, X, FileText } from "lucide-react";
+import api from "../services/api";
 
-const UOM_OPTIONS = ["Nos", "Units", "Pieces", "Boxes", "Sets", "Meters", "Kg", "Liters"];
+const UOM_OPTIONS = ["Nos", "Hours", "Month", "Year"];
 const TAX_OPTIONS = [
   { value: "GST18", label: "GST 18%" },
   { value: "GST0", label: "GST 0%" },
@@ -44,6 +45,30 @@ export default function ProformaInvoiceFormModal({
   submitting,
   onSaveDraft,
 }) {
+  const [catalogProducts, setCatalogProducts] = useState([]);
+
+  useEffect(() => {
+    if (open) {
+      api.get("/products", { params: { status: "Active" } })
+        .then(res => {
+          const list = (res.data || []).filter(p => p.status === "Active");
+          setCatalogProducts(list);
+        })
+        .catch(err => console.log("Catalog products fetch error:", err));
+    }
+  }, [open]);
+
+  const handleProductSelect = (i, selectedId) => {
+    if (!selectedId) return;
+    const found = catalogProducts.find(p => p._id === selectedId);
+    if (found) {
+      updateItem(i, "name", found.name);
+      if (found.hsn_sac_code) updateItem(i, "hsn_code", found.hsn_sac_code);
+      if (found.uom) updateItem(i, "uom", found.uom);
+      if (found.rate !== undefined && found.rate !== null) updateItem(i, "price", Number(found.rate));
+    }
+  };
+
   if (!open) return null;
 
   const fmtNum = (n) => Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -368,11 +393,25 @@ export default function ProformaInvoiceFormModal({
                             />
                           </td>
                           <td className="px-3 py-2">
+                            <select
+                              value={catalogProducts.find(p => p.name.toLowerCase() === (item.name || "").trim().toLowerCase())?._id || ""}
+                              onChange={e => handleProductSelect(i, e.target.value)}
+                              className="w-full border border-gray-200 bg-blue-50/50 rounded px-2 py-1 text-[11px] mb-1 outline-none text-gray-700 font-medium cursor-pointer hover:border-[#0088CC] focus:border-[#0088CC]"
+                            >
+                              <option value="">-- Select Product / Service --</option>
+                              {catalogProducts
+                                .filter(cp => cp.status === "Active")
+                                .map(cp => (
+                                  <option key={cp._id} value={cp._id}>
+                                    [{cp.item_type}] {cp.name} (₹{Number(cp.rate).toLocaleString('en-IN')}/{cp.uom})
+                                  </option>
+                                ))}
+                            </select>
                             <input
                               type="text"
                               value={item.name}
                               onChange={e => updateItem(i, "name", e.target.value)}
-                              placeholder="Product details"
+                              placeholder="Product details / description..."
                               className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs outline-none focus:border-[#0088CC]"
                               required
                             />

@@ -56,6 +56,7 @@ const crmQuotationRoutes = require('./routes/crmQuotationRoutes');
 const performaInvoiceRoutes = require('./routes/performaInvoiceRoutes');
 const madhuraInvoiceRoutes = require('./routes/madhuraInvoiceRoutes');
 const paymentReceiptRoutes = require('./routes/paymentReceiptRoutes');
+const productRoutes = require('./routes/productRoutes');
 
 const internalTenantRoutes = require('./routes/internalTenantRoutes');
 const { tenantMiddleware } = require('./middleware/tenantMiddleware');
@@ -88,6 +89,7 @@ app.use('/api/crm-quotations', crmQuotationRoutes);
 app.use('/api/performainvoice', performaInvoiceRoutes);
 app.use('/api/madhura-invoice', madhuraInvoiceRoutes);
 app.use('/api/payment-receipts', paymentReceiptRoutes);
+app.use('/api/products', productRoutes);
 
 app.get('/', (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? '✅ Connected' : '❌ Disconnected';
