@@ -20,7 +20,7 @@ import api from "../services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ProductFormModal from "../components/ProductFormModal";
 
-const ALL_CATEGORIES = ['Software', 'SaaS', 'Consulting', 'Website', 'Digital Product', 'Other'];
+const ALL_CATEGORIES = ['Software', 'SaaS', 'Website', 'Digital Product', 'Other'];
 
 const initialProductState = {
   item_type: "Product",
