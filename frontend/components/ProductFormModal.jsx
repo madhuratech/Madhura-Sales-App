@@ -8,9 +8,9 @@ const BILLING_TYPES = ['One-time', 'Monthly', 'Yearly'];
 function SectionTitle({ children }) {
   return (
     <div className="flex items-center gap-2 mb-3 mt-5">
-      <div className="h-1 w-5 bg-[#0088CC] rounded" />
-      <h3 className="text-xs font-bold text-[#0088CC] uppercase tracking-wide">{children}</h3>
-      <div className="flex-1 h-px bg-blue-100" />
+      <div className="h-1 w-5 bg-[#1B2B4B] rounded" />
+      <h3 className="text-xs font-bold text-[#1B2B4B] uppercase tracking-wide">{children}</h3>
+      <div className="flex-1 h-px bg-slate-200" />
     </div>
   );
 }
@@ -22,7 +22,7 @@ function TypePill({ selected, onClick, label, icon }) {
       type="button"
       onClick={() => onClick(label)}
       className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border text-sm font-semibold transition ${
-        isSelected ? 'border-[#0088CC] bg-blue-50 text-[#0088CC]' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+        isSelected ? 'border-[#1B2B4B] bg-slate-100 text-[#1B2B4B]' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
       }`}
     >
       {icon}
@@ -38,7 +38,7 @@ function TogglePill({ selected, onClick, label }) {
       type="button"
       onClick={() => onClick(label)}
       className={`px-4 py-2 rounded-lg border text-sm font-semibold transition ${
-        isSelected ? 'border-[#0088CC] bg-blue-50 text-[#0088CC]' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+        isSelected ? 'border-[#1B2B4B] bg-slate-100 text-[#1B2B4B]' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
       }`}
     >
       {label}
@@ -55,7 +55,7 @@ function SelectField({ label, required, value, onChange, options }) {
       <select
         value={value !== undefined && value !== null ? value : ''}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none text-sm focus:border-[#0088CC] focus:ring-1 focus:ring-[#0088CC] bg-white text-gray-800"
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none text-sm focus:border-[#1B2B4B] focus:ring-1 focus:ring-[#1B2B4B] bg-white text-gray-800"
       >
         <option value="" disabled>Select {label}</option>
         {options.map((opt) => (
@@ -79,7 +79,7 @@ function Field({ label, required, value, onChange, placeholder, type = 'text', m
         value={value !== undefined && value !== null ? value : ''}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder || ''}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none text-sm focus:border-[#0088CC] focus:ring-1 focus:ring-[#0088CC] text-gray-800"
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none text-sm focus:border-[#1B2B4B] focus:ring-1 focus:ring-[#1B2B4B] text-gray-800"
       />
     </div>
   );
@@ -96,7 +96,7 @@ function TextareaField({ label, required, value, onChange, placeholder }) {
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder || ''}
         rows={3}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none text-sm resize-none focus:border-[#0088CC] focus:ring-1 focus:ring-[#0088CC] text-gray-800"
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none text-sm resize-none focus:border-[#1B2B4B] focus:ring-1 focus:ring-[#1B2B4B] text-gray-800"
       />
     </div>
   );
@@ -134,7 +134,7 @@ export default function ProductFormModal({ open, editId, product, setProduct, on
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl p-6 md:p-8 relative border border-gray-100 animate-in fade-in zoom-in-95 duration-150">
         <div className="flex justify-between items-center pb-3 border-b border-gray-100 mb-2">
           <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <Package size={22} className="text-[#0088CC]" />
+            <Package size={22} className="text-[#1B2B4B]" />
             {editId ? 'Edit Product / Service' : 'Add Product / Service'}
           </h2>
           <button
@@ -147,13 +147,13 @@ export default function ProductFormModal({ open, editId, product, setProduct, on
         </div>
 
         {editId && (product.lastModifiedByName || product.createdByName) && (
-          <div className="bg-blue-50/70 border border-blue-200/80 rounded-xl px-4 py-2.5 flex items-center justify-between text-xs text-blue-950 mb-3 mt-1">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 flex items-center justify-between text-xs text-slate-800 mb-3 mt-1">
             <div className="flex items-center gap-2">
-              <UserCheck size={16} className="text-[#0088CC] shrink-0" />
+              <UserCheck size={16} className="text-[#1B2B4B] shrink-0" />
               <span>
                 Last changed by: <strong className="font-semibold text-gray-900">{product.lastModifiedByName || product.createdByName}</strong>
                 {product.lastModifiedRole ? (
-                  <span className="ml-1.5 px-1.5 py-0.5 bg-white text-[#0088CC] border border-blue-200 rounded text-[10px] font-semibold">
+                  <span className="ml-1.5 px-1.5 py-0.5 bg-white text-[#1B2B4B] border border-slate-300 rounded text-[10px] font-semibold">
                     {product.lastModifiedRole}
                   </span>
                 ) : null}
@@ -328,7 +328,7 @@ export default function ProductFormModal({ open, editId, product, setProduct, on
             <button
               type="submit"
               disabled={submitting}
-              className="bg-[#0088CC] hover:bg-[#006FA8] disabled:bg-gray-400 text-white rounded-xl px-8 py-2.5 text-sm font-semibold shadow-md transition cursor-pointer flex items-center gap-2"
+              className="bg-[#1B2B4B] hover:bg-[#243454] disabled:bg-gray-400 text-white rounded-xl px-8 py-2.5 text-sm font-semibold shadow-md transition cursor-pointer flex items-center gap-2"
             >
               {submitting ? 'Saving...' : editId ? 'Save Changes' : 'Save Item'}
             </button>

@@ -267,11 +267,11 @@ export default function ProductScreenWeb() {
         {/* Top Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#0088CC] mb-1">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#1B2B4B] mb-1">
               <Layers size={14} /> Catalog Management
             </div>
             <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-              <Package className="text-[#0088CC]" size={26} /> Products & Services
+              <Package className="text-[#1B2B4B]" size={26} /> Products & Services
             </h1>
             <p className="text-xs text-gray-500 mt-0.5">
               Standardize your billable items, HSN/SAC codes, and GST tax rates for quotes and invoices.
@@ -285,13 +285,13 @@ export default function ProductScreenWeb() {
               className="border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 px-3.5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 transition shadow-xs cursor-pointer"
               title="Refresh catalog"
             >
-              <RefreshCw size={15} className={loading ? "animate-spin text-[#0088CC]" : "text-gray-500"} />
+              <RefreshCw size={15} className={loading ? "animate-spin text-[#1B2B4B]" : "text-gray-500"} />
               <span className="hidden sm:inline">Refresh</span>
             </button>
             <button
               type="button"
               onClick={handleOpenCreate}
-              className="bg-[#0088CC] hover:bg-[#006FA8] text-white px-5 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2 transition shadow-md shadow-blue-500/20 cursor-pointer"
+              className="bg-[#1B2B4B] hover:bg-[#243454] text-white px-5 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2 transition shadow-md shadow-slate-900/10 cursor-pointer"
             >
               <Plus size={16} /> Add Product / Service
             </button>
@@ -312,10 +312,10 @@ export default function ProductScreenWeb() {
 
           <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-xs flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-blue-600 uppercase tracking-wide">Products</p>
+              <p className="text-xs font-medium text-[#1B2B4B] uppercase tracking-wide">Products</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">{productCount}</p>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center text-[#0088CC]">
+            <div className="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center text-[#1B2B4B]">
               <Package size={22} />
             </div>
           </div>
@@ -354,7 +354,7 @@ export default function ProductScreenWeb() {
               placeholder="Search products by name, HSN/SAC code, category, or description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full text-sm pl-10 pr-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 outline-none text-gray-800 placeholder-gray-400 focus:bg-white focus:border-[#0088CC] focus:ring-2 focus:ring-[#0088CC]/10 transition"
+              className="w-full text-sm pl-10 pr-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 outline-none text-gray-800 placeholder-gray-400 focus:bg-white focus:border-[#1B2B4B] focus:ring-2 focus:ring-[#1B2B4B]/10 transition"
             />
             {searchTerm && (
               <button
@@ -389,7 +389,7 @@ export default function ProductScreenWeb() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-gray-700 outline-none focus:border-[#0088CC]"
+              className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-gray-700 outline-none focus:border-[#1B2B4B]"
             >
               <option value="All">All Status</option>
               <option value="Active">Active</option>
@@ -402,7 +402,7 @@ export default function ProductScreenWeb() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-gray-700 outline-none focus:border-[#0088CC]"
+              className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-gray-700 outline-none focus:border-[#1B2B4B]"
             >
               <option value="All">All Categories</option>
               {allAvailableCategories.map((c) => (
@@ -417,12 +417,12 @@ export default function ProductScreenWeb() {
         {/* Data Table */}
         {loading ? (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-xs p-16 text-center">
-            <RefreshCw className="animate-spin inline-block text-[#0088CC] mb-3" size={32} />
+            <RefreshCw className="animate-spin inline-block text-[#1B2B4B] mb-3" size={32} />
             <p className="text-sm font-medium text-gray-600">Loading catalog items...</p>
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-xs p-14 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-blue-50 text-[#0088CC] flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-slate-100 text-[#1B2B4B] flex items-center justify-center mx-auto mb-4">
               <Package size={32} />
             </div>
             <h3 className="text-lg font-bold text-gray-800 mb-1">
@@ -438,7 +438,7 @@ export default function ProductScreenWeb() {
             <button
               type="button"
               onClick={handleOpenCreate}
-              className="bg-[#0088CC] hover:bg-[#006FA8] text-white px-5 py-2.5 rounded-xl font-semibold text-sm inline-flex items-center gap-2 transition cursor-pointer"
+              className="bg-[#1B2B4B] hover:bg-[#243454] text-white px-5 py-2.5 rounded-xl font-semibold text-sm inline-flex items-center gap-2 transition cursor-pointer"
             >
               <Plus size={16} /> Add First Item
             </button>
@@ -488,7 +488,7 @@ export default function ProductScreenWeb() {
                         <span
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold ${
                             item.item_type === "Product"
-                              ? "bg-blue-50 text-[#0088CC] border border-blue-100"
+                              ? "bg-slate-100 text-[#1B2B4B] border border-slate-200"
                               : "bg-emerald-50 text-emerald-700 border border-emerald-100"
                           }`}
                         >
@@ -555,7 +555,7 @@ export default function ProductScreenWeb() {
 
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-1.5 font-semibold text-gray-800 text-xs">
-                          <div className="w-5 h-5 rounded-full bg-blue-50 text-[#0088CC] border border-blue-200 flex items-center justify-center text-[10px] font-bold">
+                          <div className="w-5 h-5 rounded-full bg-slate-100 text-[#1B2B4B] border border-slate-300 flex items-center justify-center text-[10px] font-bold">
                             {(item.lastModifiedByName || item.createdByName || "U").charAt(0).toUpperCase()}
                           </div>
                           <span className="truncate max-w-[130px]" title={item.lastModifiedByName || item.createdByName || "System"}>
@@ -564,7 +564,7 @@ export default function ProductScreenWeb() {
                         </div>
                         <div className="text-[11px] text-gray-500 mt-0.5 flex items-center gap-1.5 flex-wrap">
                           {item.lastModifiedRole && (
-                            <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-medium border border-slate-200">
+                            <span className="px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] font-medium border border-slate-200">
                               {item.lastModifiedRole}
                             </span>
                           )}
@@ -580,7 +580,7 @@ export default function ProductScreenWeb() {
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(item)}
-                            className="p-1.5 text-gray-500 hover:text-[#0088CC] hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                            className="p-1.5 text-gray-500 hover:text-[#1B2B4B] hover:bg-slate-100 rounded-lg transition cursor-pointer"
                             title="Edit Item"
                           >
                             <Edit2 size={16} />

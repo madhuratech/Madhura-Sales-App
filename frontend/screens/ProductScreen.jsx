@@ -54,12 +54,12 @@ function TypePill({ selected, onClick, label, icon }) {
         paddingHorizontal: 12,
         borderRadius: 12,
         borderWidth: 1.5,
-        borderColor: isSelected ? '#0284c7' : '#e2e8f0',
-        backgroundColor: isSelected ? '#eff6ff' : '#fff',
+        borderColor: isSelected ? '#1B2B4B' : '#e2e8f0',
+        backgroundColor: isSelected ? '#f1f5f9' : '#fff',
       }}
     >
       {icon}
-      <Text style={{ fontSize: 13, fontWeight: '600', color: isSelected ? '#0284c7' : '#64748b' }}>
+      <Text style={{ fontSize: 13, fontWeight: '600', color: isSelected ? '#1B2B4B' : '#64748b' }}>
         {label}
       </Text>
     </TouchableOpacity>
@@ -76,11 +76,11 @@ function TogglePill({ selected, onClick, label }) {
         paddingHorizontal: 16,
         borderRadius: 10,
         borderWidth: 1.5,
-        borderColor: isSelected ? '#0284c7' : '#e2e8f0',
-        backgroundColor: isSelected ? '#eff6ff' : '#fff',
+        borderColor: isSelected ? '#1B2B4B' : '#e2e8f0',
+        backgroundColor: isSelected ? '#f1f5f9' : '#fff',
       }}
     >
-      <Text style={{ fontSize: 12, fontWeight: '600', color: isSelected ? '#0284c7' : '#64748b' }}>
+      <Text style={{ fontSize: 12, fontWeight: '600', color: isSelected ? '#1B2B4B' : '#64748b' }}>
         {label}
       </Text>
     </TouchableOpacity>
@@ -342,7 +342,7 @@ export default function ProductScreen() {
           {!showForm && (
             <TouchableOpacity
               onPress={() => { resetForm(); setShowForm(true); }}
-              style={{ backgroundColor: '#0f172a', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 6 }}
+              style={{ backgroundColor: '#1B2B4B', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 6 }}
             >
               <Ionicons name="add" size={18} color="#fff" />
               <Text style={{ color: '#fff', fontWeight: '600', fontSize: 13 }}>Add Item</Text>
@@ -358,10 +358,10 @@ export default function ProductScreen() {
               </Text>
 
               {editId && (product.lastModifiedByName || product.createdByName) ? (
-                <View style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 12, padding: 12, marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Ionicons name="person-circle-outline" size={22} color="#0284c7" />
+                <View style={{ backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 12, padding: 12, marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="person-circle-outline" size={22} color="#1B2B4B" />
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 12, color: '#1e3a8a', fontWeight: '600' }}>
+                    <Text style={{ fontSize: 12, color: '#1e293b', fontWeight: '600' }}>
                       Last changed by: {product.lastModifiedByName || product.createdByName} {product.lastModifiedRole ? `(${product.lastModifiedRole})` : ''}
                     </Text>
                     {product.lastModifiedAt ? (
@@ -604,8 +604,8 @@ export default function ProductScreen() {
                     <View style={{ flex: 1, paddingRight: 8 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
                         <Text style={{ fontSize: 16, fontWeight: '700', color: '#0f172a' }}>{p.name}</Text>
-                        <View style={{ backgroundColor: p.item_type === 'Product' ? '#e0f2fe' : '#dcfce7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
-                          <Text style={{ fontSize: 11, color: p.item_type === 'Product' ? '#0369a1' : '#15803d', fontWeight: '600' }}>{p.item_type}</Text>
+                        <View style={{ backgroundColor: p.item_type === 'Product' ? '#f1f5f9' : '#dcfce7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
+                          <Text style={{ fontSize: 11, color: p.item_type === 'Product' ? '#1B2B4B' : '#15803d', fontWeight: '600' }}>{p.item_type}</Text>
                         </View>
                         <View style={{ backgroundColor: p.status === 'Active' ? '#f0fdf4' : '#f8fafc', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: p.status === 'Active' ? '#bbf7d0' : '#e2e8f0' }}>
                           <Text style={{ fontSize: 11, color: p.status === 'Active' ? '#16a34a' : '#64748b', fontWeight: '600' }}>{p.status}</Text>
@@ -626,7 +626,7 @@ export default function ProductScreen() {
                         <Text style={{ fontSize: 12, color: '#64748b', marginTop: 2 }} numberOfLines={2}>{p.description}</Text>
                       ) : null}
 
-                      <Text style={{ fontSize: 16, color: '#0284c7', fontWeight: '700', marginTop: 6 }}>
+                      <Text style={{ fontSize: 16, color: '#1B2B4B', fontWeight: '700', marginTop: 6 }}>
                         ₹{Number(p.rate || 0).toLocaleString('en-IN')} <Text style={{ fontSize: 12, color: '#64748b', fontWeight: '400' }}>/ {p.uom || 'Nos'}</Text>
                       </Text>
                     </View>
