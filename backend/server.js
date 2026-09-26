@@ -57,9 +57,14 @@ const performaInvoiceRoutes = require('./routes/performaInvoiceRoutes');
 const madhuraInvoiceRoutes = require('./routes/madhuraInvoiceRoutes');
 const paymentReceiptRoutes = require('./routes/paymentReceiptRoutes');
 const productRoutes = require('./routes/productRoutes');
+const universalShareRoutes = require('./routes/v1/universalShareRoutes');
 
 const internalTenantRoutes = require('./routes/internalTenantRoutes');
 const { tenantMiddleware } = require('./middleware/tenantMiddleware');
+
+// Mount Universal Two-Way Microservices Gateway (accessible via both /v1 and /api/v1)
+app.use('/v1', universalShareRoutes);
+app.use('/api/v1', universalShareRoutes);
 
 // Mount internal SaaS APIs
 app.use('/api/internal/tenant', internalTenantRoutes);

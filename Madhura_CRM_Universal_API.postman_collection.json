@@ -1,0 +1,300 @@
+{
+	"info": {
+		"_postman_id": "madhura-universal-api-gateway",
+		"name": "Madhura CRM Universal API Gateway",
+		"description": "Two-Way Universal Share & Sync API Collection for Madhura CRM and Client Portal microservice.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5005",
+			"type": "string"
+		},
+		{
+			"key": "api_key",
+			"value": "crm_live_9981abc123",
+			"type": "string"
+		},
+		{
+			"key": "sample_client_id",
+			"value": "6a7c1d6d4b50dbbac70920cd",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Gateway Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/v1/health",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"health"
+					]
+				}
+			}
+		},
+		{
+			"name": "2. Universal Share Bundle (All in 1)",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-API-Key",
+						"value": "{{api_key}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/share/bundle?client_id={{sample_client_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"share",
+						"bundle"
+					],
+					"query": [
+						{
+							"key": "client_id",
+							"value": "{{sample_client_id}}"
+						}
+					]
+				}
+			}
+		},
+		{
+			"name": "3. Get All Clients",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-API-Key",
+						"value": "{{api_key}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/clients",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"clients"
+					]
+				}
+			}
+		},
+		{
+			"name": "4. Get Single Client Details",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-API-Key",
+						"value": "{{api_key}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/clients/{{sample_client_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"clients",
+						"{{sample_client_id}}"
+					]
+				}
+			}
+		},
+		{
+			"name": "5. Get Projects",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-API-Key",
+						"value": "{{api_key}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/projects",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"projects"
+					]
+				}
+			}
+		},
+		{
+			"name": "6. Get Invoices",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-API-Key",
+						"value": "{{api_key}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/invoices",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"invoices"
+					]
+				}
+			}
+		},
+		{
+			"name": "7. Get Support Questions (Tickets)",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-API-Key",
+						"value": "{{api_key}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/tickets",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"tickets"
+					]
+				}
+			}
+		},
+		{
+			"name": "8. Ask a Question (Create Ticket)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-API-Key",
+						"value": "{{api_key}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"client_id\": \"{{sample_client_id}}\",\n  \"title\": \"Payment confirmation inquiry\",\n  \"description\": \"Please share updated receipt for milestone 1.\",\n  \"category\": \"BILLING\",\n  \"priority\": \"HIGH\",\n  \"author_name\": \"Client Admin\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/tickets",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"tickets"
+					]
+				}
+			}
+		},
+		{
+			"name": "9. Post Staff Reply to Ticket",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-API-Key",
+						"value": "{{api_key}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"sender_type\": \"STAFF\",\n  \"author_name\": \"Account Manager\",\n  \"message\": \"Receipt has been verified and attached to your billing dashboard.\",\n  \"internal\": false\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/tickets/TCK_ID/messages",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"tickets",
+						"TCK_ID",
+						"messages"
+					]
+				}
+			}
+		},
+		{
+			"name": "10. Create Payment Intent",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-API-Key",
+						"value": "{{api_key}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"amount\": 59000,\n  \"currency\": \"INR\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/invoices/INV_ID/payment-intent",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"invoices",
+						"INV_ID",
+						"payment-intent"
+					]
+				}
+			}
+		}
+	]
+}
