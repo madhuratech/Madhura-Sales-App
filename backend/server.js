@@ -25,7 +25,12 @@ const io = socketio(server, {
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-internal-api-key', 'X-Requested-With', 'Accept', 'Origin'],
+}));
+app.options('*', cors());
 app.use(express.json());
 
 // Socket.io injection middleware (so controllers can access io)
@@ -56,9 +61,15 @@ const crmQuotationRoutes = require('./routes/crmQuotationRoutes');
 const performaInvoiceRoutes = require('./routes/performaInvoiceRoutes');
 const madhuraInvoiceRoutes = require('./routes/madhuraInvoiceRoutes');
 const paymentReceiptRoutes = require('./routes/paymentReceiptRoutes');
+const productRoutes = require('./routes/productRoutes');
+const universalShareRoutes = require('./routes/v1/universalShareRoutes');
 
 const internalTenantRoutes = require('./routes/internalTenantRoutes');
 const { tenantMiddleware } = require('./middleware/tenantMiddleware');
+
+// Mount Universal Two-Way Microservices Gateway (accessible via both /v1 and /api/v1)
+app.use('/v1', universalShareRoutes);
+app.use('/api/v1', universalShareRoutes);
 
 // Mount internal SaaS APIs
 app.use('/api/internal/tenant', internalTenantRoutes);
@@ -88,6 +99,7 @@ app.use('/api/crm-quotations', crmQuotationRoutes);
 app.use('/api/performainvoice', performaInvoiceRoutes);
 app.use('/api/madhura-invoice', madhuraInvoiceRoutes);
 app.use('/api/payment-receipts', paymentReceiptRoutes);
+app.use('/api/products', productRoutes);
 
 app.get('/', (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? '✅ Connected' : '❌ Disconnected';

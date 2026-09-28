@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { PlusCircle, X, RefreshCw, Eye, FileText } from "lucide-react";
+import api from "../services/api";
 
-const UOM_OPTIONS = ["Lumpsum", "Nos", "Units", "Pieces", "Sets", "Meters", "Kg", "Liters", "Hours"];
+const UOM_OPTIONS = ["Nos", "Hours", "Month", "Year", "Lumpsum"];
 const SERVICE_TYPES = ["CRM", "WEBSITE", "DM", "POSTERS"];
 
 export default function TaxInvoiceFormModal({
@@ -33,6 +34,33 @@ export default function TaxInvoiceFormModal({
   aggregatedData,
   setItems,
 }) {
+  const [catalogProducts, setCatalogProducts] = useState([]);
+
+  useEffect(() => {
+    if (open) {
+      api.get("/products", { params: { status: "Active" } })
+        .then(res => {
+          const list = (res.data || []).filter(p => p.status === "Active");
+          setCatalogProducts(list);
+        })
+        .catch(err => console.log("Catalog products fetch error:", err));
+    }
+  }, [open]);
+
+  const handleProductSelect = (i, selectedId) => {
+    if (!selectedId) return;
+    const found = catalogProducts.find(p => p._id === selectedId);
+    if (found) {
+      updateItem(i, "description", found.name);
+      if (found.hsn_sac_code) updateItem(i, "sac_code", found.hsn_sac_code);
+      if (found.uom) updateItem(i, "uom", found.uom);
+      if (found.rate !== undefined && found.rate !== null) {
+        const qty = Number(items[i]?.quantity) || 1;
+        updateItem(i, "total_amount", Number(found.rate) * qty);
+      }
+    }
+  };
+
   if (!open) return null;
 
   const fmtNum = (n) => Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 0 });
@@ -356,13 +384,27 @@ export default function TaxInvoiceFormModal({
                   <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                     <div className="md:col-span-2">
                       <label className="block text-xs font-semibold text-gray-600 mb-1">
-                        Description <span className="text-red-500">*</span>
+                        Product / Service & Description <span className="text-red-500">*</span>
                       </label>
+                      <select
+                        value={catalogProducts.find(p => p.name.toLowerCase() === (item.description || "").trim().toLowerCase())?._id || ""}
+                        onChange={e => handleProductSelect(i, e.target.value)}
+                        className="w-full border border-gray-200 bg-blue-50/50 rounded px-2 py-1 text-[11px] mb-1 outline-none text-gray-700 font-medium cursor-pointer hover:border-[#0088CC] focus:border-[#0088CC]"
+                      >
+                        <option value="">-- Select Product / Service --</option>
+                        {catalogProducts
+                          .filter(cp => cp.status === "Active")
+                          .map(cp => (
+                            <option key={cp._id} value={cp._id}>
+                              [{cp.item_type}] {cp.name} (₹{Number(cp.rate).toLocaleString('en-IN')}/{cp.uom})
+                            </option>
+                          ))}
+                      </select>
                       <input
                         type="text"
                         value={item.description}
                         onChange={e => updateItem(i, "description", e.target.value)}
-                        placeholder="Item description"
+                        placeholder="Item description..."
                         className="border border-gray-300 rounded-lg px-3 py-2 outline-none text-sm w-full bg-white"
                         required
                       />

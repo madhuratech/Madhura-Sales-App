@@ -52,6 +52,7 @@ const allAdminNavSections = [
       { title: 'Field Staff Mgmt',  screen: 'UserManagement',           icon: 'people-outline',    iconActive: 'people' },
       { title: 'Client Onboarding', screen: 'ClientOnboarding',         icon: 'briefcase-outline', iconActive: 'briefcase' },
       { title: 'Projects',          screen: 'Project',                  icon: 'laptop-outline',    iconActive: 'laptop' },
+      { title: 'Products & Services', screen: 'Product',                icon: 'cube-outline',      iconActive: 'cube' },
       { title: 'Quotations',        screen: 'Quotation',                icon: 'document-text-outline', iconActive: 'document-text' },
       { title: 'Log Client Visit',  screen: 'Meeting',                  icon: 'location-outline',  iconActive: 'location' },
       { title: 'Proforma Invoices', screen: 'ProformaInvoice',          icon: 'receipt-outline',   iconActive: 'receipt' },
@@ -82,6 +83,7 @@ const employeeNavSections = [
       { title: 'Work Update',      screen: 'WorkUpdate',      icon: 'document-text-outline', iconActive: 'document-text' },
       { title: 'Client Onboarding',screen: 'ClientOnboarding',icon: 'briefcase-outline',     iconActive: 'briefcase' },
       { title: 'Projects',         screen: 'Project',         icon: 'laptop-outline',        iconActive: 'laptop' },
+      { title: 'Products & Services', screen: 'Product',       icon: 'cube-outline',          iconActive: 'cube' },
       { title: 'Quotations',       screen: 'Quotation',       icon: 'document-text-outline', iconActive: 'document-text' },
       { title: 'Proforma Invoices', screen: 'ProformaInvoice',          icon: 'receipt-outline',   iconActive: 'receipt' },
       { title: 'Tax Invoices',      screen: 'Invoice',                  icon: 'wallet-outline',    iconActive: 'wallet' },
@@ -115,6 +117,7 @@ function buildNavSections(role) {
           { title: 'Dashboard',         screen: 'AdminDashboard',           icon: 'grid-outline',      iconActive: 'grid' },
           { title: 'Field Staff Mgmt',  screen: 'UserManagement',           icon: 'people-outline',    iconActive: 'people' },
           { title: 'Client Onboarding', screen: 'ClientOnboarding',         icon: 'briefcase-outline', iconActive: 'briefcase' },
+          { title: 'Products & Services', screen: 'Product',                icon: 'cube-outline',      iconActive: 'cube' },
         ],
       },
       {
@@ -279,10 +282,10 @@ export default function AppLayout({ children, currentScreen, scrollable = true, 
     return () => api.interceptors.response.eject(interceptor);
   }, []);
 
-  // Periodic location check and live sharing for employees
+  // Periodic location check and live sharing for employees (mobile only, Field Executive only)
   useEffect(() => {
-    const adminRoles = ['Admin', 'HR', 'Managing Director MD', 'Project Manager', 'Team Lead'];
-    if (!userRole || adminRoles.includes(userRole)) return;
+    if (Platform.OS === 'web') return;
+    if (!userRole || userRole !== 'Field Executive') return;
 
     const checkAndShareLocation = async () => {
       try {

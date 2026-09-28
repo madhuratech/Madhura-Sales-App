@@ -36,7 +36,7 @@
     "nativewind": "^4.2.5",
     "postcss": "^8.4.31",
     "react": "19.2.3",
-    "react-dom": "^19.2.3",
+    "react-dom": "^19.2.3",  
     "react-hook-form": "^7.51.3",
     "react-native": "0.85.3",
     "react-native-gesture-handler": "~2.31.1",
