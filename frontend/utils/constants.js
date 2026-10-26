@@ -18,8 +18,8 @@ const WEB_HOST = (typeof window !== 'undefined' && window.location) ? window.loc
 const HOST_FROM_DEBUGGER = resolveExpoHost();
 const LOCAL_HOST = 'localhost'; // Updated to work locally without Wi-Fi issues
 
-const PRODUCTION_API_URL = 'https://madhura-sales-app-p8zp.onrender.com/api';
-const PRODUCTION_SOCKET_URL = 'https://madhura-sales-app-p8zp.onrender.com';
+const PRODUCTION_API_URL = 'https://api.crm.madhuratech.com/api';
+const PRODUCTION_SOCKET_URL = 'https://api.crm.madhuratech.com';
 
 // True when running as a deployed web app (not on localhost/emulator)
 const isWebProduction = Platform.OS === 'web' &&
@@ -52,20 +52,20 @@ const DEV_SOCKET_URL = `http://${DEV_HOST}:5005`;
 
 const isDev = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV !== 'production';
 
-const isLocalhostUrl = (url) => {
+const isInvalidProductionUrl = (url) => {
   if (!url || typeof url !== 'string') return false;
-  return url.includes('localhost') || url.includes('127.0.0.1');
+  return url.includes('localhost') || url.includes('127.0.0.1') || url.includes('onrender.com');
 };
 
 // Resolution order:
-// 1. Web production (e.g. crm.madhuratech.com) -> Always use PRODUCTION_API_URL (never localhost)
+// 1. Web production (e.g. crm.madhuratech.com) -> Always use PRODUCTION_API_URL (never localhost or deprecated render)
 // 2. Local web dev -> STATIC_API_URL or DEV_API_URL
 // 3. Native mobile apps -> STATIC_API_URL or DEV_API_URL (in dev) / PRODUCTION_API_URL (in prod)
 export const API_URL = (() => {
   if (Platform.OS === 'web') {
     const isLocalWeb = !WEB_HOST || WEB_HOST === 'localhost' || WEB_HOST === '127.0.0.1';
     if (!isLocalWeb) {
-      if (STATIC_API_URL && !isLocalhostUrl(STATIC_API_URL)) {
+      if (STATIC_API_URL && !isInvalidProductionUrl(STATIC_API_URL)) {
         return STATIC_API_URL;
       }
       return PRODUCTION_API_URL;
@@ -73,7 +73,7 @@ export const API_URL = (() => {
     return STATIC_API_URL || DEV_API_URL;
   }
 
-  if (STATIC_API_URL) return STATIC_API_URL;
+  if (STATIC_API_URL && !STATIC_API_URL.includes('onrender.com')) return STATIC_API_URL;
   return isDev ? DEV_API_URL : PRODUCTION_API_URL;
 })();
 
@@ -84,7 +84,7 @@ export const SOCKET_URL = (() => {
   if (Platform.OS === 'web') {
     const isLocalWeb = !WEB_HOST || WEB_HOST === 'localhost' || WEB_HOST === '127.0.0.1';
     if (!isLocalWeb) {
-      if (STATIC_SOCKET_URL && !isLocalhostUrl(STATIC_SOCKET_URL)) {
+      if (STATIC_SOCKET_URL && !isInvalidProductionUrl(STATIC_SOCKET_URL)) {
         return STATIC_SOCKET_URL;
       }
       return PRODUCTION_SOCKET_URL;
@@ -92,7 +92,7 @@ export const SOCKET_URL = (() => {
     return STATIC_SOCKET_URL || DEV_SOCKET_URL;
   }
 
-  if (STATIC_SOCKET_URL) return STATIC_SOCKET_URL;
+  if (STATIC_SOCKET_URL && !STATIC_SOCKET_URL.includes('onrender.com')) return STATIC_SOCKET_URL;
   return isDev ? DEV_SOCKET_URL : PRODUCTION_SOCKET_URL;
 })();
 
