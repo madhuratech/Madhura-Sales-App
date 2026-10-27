@@ -74,18 +74,53 @@ exports.getNextDetails = async (req, res, next) => {
   try {
     const { clientId, serviceType = 'CRM' } = req.query;
 
-    const count = await TaxInvoice.countDocuments();
-    const nextNum = count + 1;
+    const existingInvoices = await TaxInvoice.find(
+      {},
+      { invoice_no: 1, service_no: 1, running_bill_no: 1 }
+    ).lean();
+
+    let maxInvoiceNum = 0;
+    let maxRunningBillNum = 0;
+    let maxServiceNum = 0;
+
+    for (const inv of existingInvoices) {
+      if (inv.invoice_no) {
+        const m = inv.invoice_no.match(/\/(\d+)$/);
+        if (m) {
+          const val = parseInt(m[1], 10);
+          if (!isNaN(val) && val > maxInvoiceNum) maxInvoiceNum = val;
+        }
+      }
+      if (inv.running_bill_no) {
+        const m = inv.running_bill_no.match(/\/(\d+)$/);
+        if (m) {
+          const val = parseInt(m[1], 10);
+          if (!isNaN(val) && val > maxRunningBillNum) maxRunningBillNum = val;
+        }
+      }
+      if (inv.service_no) {
+        const m = inv.service_no.match(/\/(\d+)$/);
+        if (m) {
+          const val = parseInt(m[1], 10);
+          if (!isNaN(val) && val > maxServiceNum) maxServiceNum = val;
+        }
+      }
+    }
+
+    let nextNum = Math.max(maxInvoiceNum + 1, existingInvoices.length + 1);
+    let invoice_no = `MT/26-27/${String(nextNum).padStart(3, '0')}`;
+    let running_bill_no = `MT/RB/${String(Math.max(maxRunningBillNum + 1, nextNum)).padStart(3, '0')}`;
+    let service_no = `MT/${serviceType}/INV/${String(Math.max(maxServiceNum + 1, nextNum)).padStart(2, '0')}`;
+
+    // Loop until we find an invoice_no that does NOT exist in the database
+    while (existingInvoices.some(inv => inv.invoice_no === invoice_no)) {
+      nextNum++;
+      invoice_no = `MT/26-27/${String(nextNum).padStart(3, '0')}`;
+      running_bill_no = `MT/RB/${String(nextNum).padStart(3, '0')}`;
+      service_no = `MT/${serviceType}/INV/${String(nextNum).padStart(2, '0')}`;
+    }
+
     const paddedNum = String(nextNum).padStart(3, '0');
-    const paddedServiceNum = String(nextNum).padStart(2, '0');
-
-    // MT/26-27/001
-    const invoice_no = `MT/26-27/${paddedNum}`;
-    // MT/CRM/INV/01
-    const service_no = `MT/${serviceType}/INV/${paddedServiceNum}`;
-    // MT/RB/001
-    const running_bill_no = `MT/RB/${paddedNum}`;
-
     let client_code = `MT${paddedNum}`;
     if (clientId && clientId !== 'null' && clientId !== 'undefined') {
       const customer = await Customer.findById(clientId).lean();
@@ -240,6 +275,11 @@ exports.createInvoice = async (req, res, next) => {
       invoiceId: newInvoice._id
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: `Invoice number "${req.body?.header?.invoice_no}" already exists. Please choose a different Invoice No or click Refresh.`
+      });
+    }
     next(error);
   }
 };
@@ -313,6 +353,11 @@ exports.updateInvoice = async (req, res, next) => {
 
     res.status(200).json({ message: "Invoice updated" });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: `Invoice number "${req.body?.header?.invoice_no}" already exists. Please choose a different Invoice No.`
+      });
+    }
     next(error);
   }
 };
