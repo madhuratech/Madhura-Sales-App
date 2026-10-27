@@ -25,7 +25,12 @@ const io = socketio(server, {
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-internal-api-key', 'X-Requested-With', 'Accept', 'Origin'],
+}));
+app.options('*', cors());
 app.use(express.json());
 
 // Socket.io injection middleware (so controllers can access io)

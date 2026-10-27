@@ -228,9 +228,10 @@ export default function PaymentReceiptScreenWeb() {
     setItems(copy);
   };
 
-  const addItem = () => {
+  const addItemRow = () => {
     setItems(prev => [...prev, { sl_no: prev.length + 1, service_name: "", total_amount: 0, advance_amount: 0, received_amount: 0 }]);
   };
+  const addItem = addItemRow;
 
   const handleSelectProduct = (idx, prodId) => {
     if (!prodId) return;

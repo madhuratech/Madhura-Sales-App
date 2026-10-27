@@ -282,10 +282,10 @@ export default function AppLayout({ children, currentScreen, scrollable = true, 
     return () => api.interceptors.response.eject(interceptor);
   }, []);
 
-  // Periodic location check and live sharing for employees
+  // Periodic location check and live sharing for employees (mobile only, Field Executive only)
   useEffect(() => {
-    const adminRoles = ['Admin', 'HR', 'Managing Director MD', 'Project Manager', 'Team Lead'];
-    if (!userRole || adminRoles.includes(userRole)) return;
+    if (Platform.OS === 'web') return;
+    if (!userRole || userRole !== 'Field Executive') return;
 
     const checkAndShareLocation = async () => {
       try {

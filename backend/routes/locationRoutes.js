@@ -5,7 +5,7 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 
 router.use(protect);
 
-router.post('/', authorize('Field Executive'), recordLocation);
+router.post('/', recordLocation);
 router.get('/latest', authorize('Admin', 'Manager'), getLatestLocations);
 router.get('/history/:userId', authorize('Admin', 'Manager'), getLocationHistory);
 

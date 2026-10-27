@@ -20,6 +20,8 @@ export default function Layout() {
     if (Appearance && typeof Appearance.setColorScheme === 'function') {
       Appearance.setColorScheme('light');
     }
+    // Hide the splash screen once the root layout has mounted
+    SplashScreen.hideAsync().catch(() => {});
   }, []);
 
   return (

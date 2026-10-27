@@ -17,6 +17,7 @@ const mapTaxInvoiceRows = (inv) => {
     running_bill_no: inv.running_bill_no,
     bill_date: inv.bill_date ? new Date(inv.bill_date).toISOString() : '',
     advance_amount: inv.advance_amount,
+    without_tax: Boolean(inv.without_tax),
     sl_no: item.sl_no,
     description: item.description,
     sac_code: item.sac_code,
@@ -215,6 +216,7 @@ exports.createInvoice = async (req, res, next) => {
       running_bill_no: header.running_bill_no || '',
       bill_date: header.bill_date ? new Date(header.bill_date) : new Date(),
       advance_amount: Number(header.advance_amount) || 0,
+      without_tax: Boolean(header.without_tax),
       items: items.map(item => ({
         sl_no: Number(item.sl_no),
         description: item.description,
@@ -277,6 +279,7 @@ exports.updateInvoice = async (req, res, next) => {
     
     const prevAdvance = dbInvoice.advance_amount;
     dbInvoice.advance_amount = Number(header.advance_amount) || 0;
+    dbInvoice.without_tax = Boolean(header.without_tax);
     
     dbInvoice.items = items.map(item => ({
       sl_no: Number(item.sl_no),

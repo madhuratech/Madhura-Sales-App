@@ -38,6 +38,7 @@ const taxInvoiceSchema = new mongoose.Schema({
   running_bill_no: { type: String, default: '' },
   bill_date: { type: Date, required: true },
   advance_amount: { type: Number, default: 0 },
+  without_tax: { type: Boolean, default: false },
   items: [taxInvoiceItemSchema]
 }, { timestamps: true });
 

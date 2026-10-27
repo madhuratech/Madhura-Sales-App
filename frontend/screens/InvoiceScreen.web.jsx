@@ -13,7 +13,7 @@ import madhuraLogo from "../assets/madhura.png";
 import signatureImage from "../assets/sign.png";
 
 
-const SERVICE_TYPES = ["CRM", "WEBSITE", "DM", "POSTERS"];
+const SERVICE_TYPES = ["CRM", "WEBSITE", "DM", "POSTERS", "SOFTWARE"];
 const UOM_OPTIONS = ["Lumpsum", "Nos", "Units", "Pieces", "Sets", "Meters", "Kg", "Liters", "Hours"];
 
 const emptyItem = (sl) => ({ sl_no: sl, description: "", sac_code: "", uom: "Lumpsum", quantity: 1, total_amount: 0 });
@@ -21,7 +21,8 @@ const emptyItem = (sl) => ({ sl_no: sl, description: "", sac_code: "", uom: "Lum
 const emptyHeader = () => ({
   client_id: "", client_name: "", client_company: "", client_address: "",
   client_gstin: "", service_no: "", client_code: "", invoice_no: "",
-  running_bill_no: "", bill_date: new Date().toISOString().slice(0, 10), advance_amount: 0
+  running_bill_no: "", bill_date: new Date().toISOString().slice(0, 10), advance_amount: 0,
+  without_tax: false
 });
 
 // Number-to-words helper
@@ -161,18 +162,18 @@ const InvoicePreview = React.forwardRef(function InvoicePreview(
               <td style={{ borderRight: "1.5px solid #000", padding: "5px 4px", textAlign: "center" }}></td>
               <td colSpan="2" style={{ borderRight: "1.5px solid #000", padding: "5px 8px", textAlign: "left", fontWeight: "bold" }}>CGST</td>
               <td style={{ borderRight: "1.5px solid #000", padding: "5px 4px", textAlign: "center" }}></td>
-              <td style={{ borderRight: "1.5px solid #000", padding: "5px 4px", textAlign: "center" }}>9%</td>
+              <td style={{ borderRight: "1.5px solid #000", padding: "5px 4px", textAlign: "center" }}>{cgst > 0 ? "9%" : "0%"}</td>
               <td style={{ padding: "5px 8px", textAlign: "center", fontWeight: "bold" }}>{fmtNum(cgst)}/-</td>
             </tr>
             <tr style={{ borderBottom: "1px solid #000" }}>
               <td style={{ borderRight: "1.5px solid #000", padding: "5px 4px", textAlign: "center" }}></td>
               <td colSpan="2" style={{ borderRight: "1.5px solid #000", padding: "5px 8px", textAlign: "left", fontWeight: "bold" }}>SGST</td>
               <td style={{ borderRight: "1.5px solid #000", padding: "5px 4px", textAlign: "center" }}></td>
-              <td style={{ borderRight: "1.5px solid #000", padding: "5px 4px", textAlign: "center" }}>9%</td>
+              <td style={{ borderRight: "1.5px solid #000", padding: "5px 4px", textAlign: "center" }}>{sgst > 0 ? "9%" : "0%"}</td>
               <td style={{ padding: "5px 8px", textAlign: "center", fontWeight: "bold" }}>{fmtNum(sgst)}/-</td>
             </tr>
             <tr style={{ borderBottom: "1.5px solid #000", fontWeight: "bold" }}>
-              <td colSpan="5" style={{ borderRight: "1.5px solid #000", padding: "5px 12px", textAlign: "center", textTransform: "uppercase" }}>TOTAL (INCLUSIVE OF TAX)</td>
+              <td colSpan="5" style={{ borderRight: "1.5px solid #000", padding: "5px 12px", textAlign: "center", textTransform: "uppercase" }}>{cgst > 0 || sgst > 0 ? "TOTAL (INCLUSIVE OF TAX)" : "TOTAL AMOUNT"}</td>
               <td style={{ padding: "5px 8px", textAlign: "center" }}>{fmtNum(grandTotal)}/-</td>
             </tr>
             <tr style={{ borderBottom: "1.5px solid #000", fontWeight: "bold" }}>
@@ -370,6 +371,7 @@ export default function InvoiceScreenWeb() {
       running_bill_no: h.running_bill_no || "",
       bill_date: h.bill_date ? String(h.bill_date).slice(0, 10) : "",
       advance_amount: h.advance_amount || "",
+      without_tax: Boolean(h.without_tax),
     };
     const items = rows.filter(r => r.sl_no != null).map(r => ({
       sl_no: r.sl_no, description: r.description || "", sac_code: r.sac_code || "",
@@ -382,16 +384,21 @@ export default function InvoiceScreenWeb() {
   const renderRevPreview = (rows) => {
     const { header, items } = rowsToHeaderItems(rows);
     const sub = items.reduce((s, it) => s + (Number(it.total_amount) || 0), 0);
+    const isNoTax = Boolean(header.without_tax);
+    const cgstVal = isNoTax ? 0 : sub * 0.09;
+    const sgstVal = isNoTax ? 0 : sub * 0.09;
+    const grandVal = sub + cgstVal + sgstVal;
+    const advVal = Number(header.advance_amount) || 0;
     return (
       <InvoicePreview
         header={header}
         items={items}
         subtotal={sub}
-        cgst={sub * 0.09}
-        sgst={sub * 0.09}
-        grandTotal={sub * 1.18}
-        advance={Number(header.advance_amount) || 0}
-        netPayable={(sub * 1.18) - (Number(header.advance_amount) || 0)}
+        cgst={cgstVal}
+        sgst={sgstVal}
+        grandTotal={grandVal}
+        advance={advVal}
+        netPayable={grandVal - advVal}
       />
     );
   };
@@ -466,9 +473,10 @@ export default function InvoiceScreenWeb() {
         running_bill_no: h.running_bill_no || "",
         bill_date: h.bill_date ? h.bill_date.slice(0, 10) : "",
         advance_amount: h.advance_amount || 0,
+        without_tax: Boolean(h.without_tax),
       });
       const svMatch = (h.service_no || "").match(/MT\/([^/]+)\/INV/);
-      if (svMatch) setServiceType(svMatch[1]);
+      if (svMatch) setServiceType(svMatch[1].toUpperCase());
       const loaded = rows.filter(r => r.sl_no != null).map(r => ({
         sl_no: r.sl_no, description: r.description || "", sac_code: r.sac_code || "",
         uom: r.uom || "Lumpsum", quantity: r.quantity || 1,
@@ -611,9 +619,10 @@ export default function InvoiceScreenWeb() {
     inv.project_names?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const withoutTax = Boolean(header.without_tax);
   const subtotal = items.reduce((sum, it) => sum + Number(it.total_amount || 0), 0);
-  const cgst = subtotal * 0.09;
-  const sgst = subtotal * 0.09;
+  const cgst = withoutTax ? 0 : subtotal * 0.09;
+  const sgst = withoutTax ? 0 : subtotal * 0.09;
   const grandTotal = subtotal + cgst + sgst;
   const advance = Number(header.advance_amount) || 0;
   const netPayable = grandTotal - advance;
@@ -740,17 +749,28 @@ export default function InvoiceScreenWeb() {
                 </div>
               </div>
               <div className="overflow-x-auto bg-gray-100 p-4 rounded-lg max-h-[80vh]">
-                <InvoicePreview
-                  ref={previewRef}
-                  header={viewData.header}
-                  items={viewData.items}
-                  subtotal={viewData.items.reduce((s, it) => s + (Number(it.total_amount) || 0), 0)}
-                  cgst={viewData.items.reduce((s, it) => s + (Number(it.total_amount) || 0), 0) * 0.09}
-                  sgst={viewData.items.reduce((s, it) => s + (Number(it.total_amount) || 0), 0) * 0.09}
-                  grandTotal={viewData.items.reduce((s, it) => s + (Number(it.total_amount) || 0), 0) * 1.18}
-                  advance={Number(viewData.header.advance_amount) || 0}
-                  netPayable={(viewData.items.reduce((s, it) => s + (Number(it.total_amount) || 0), 0) * 1.18) - (Number(viewData.header.advance_amount) || 0)}
-                />
+                {(() => {
+                  const prevSub = viewData.items.reduce((s, it) => s + (Number(it.total_amount) || 0), 0);
+                  const prevNoTax = Boolean(viewData.header?.without_tax);
+                  const prevCgst = prevNoTax ? 0 : prevSub * 0.09;
+                  const prevSgst = prevNoTax ? 0 : prevSub * 0.09;
+                  const prevGrand = prevSub + prevCgst + prevSgst;
+                  const prevAdv = Number(viewData.header?.advance_amount) || 0;
+                  const prevNet = prevGrand - prevAdv;
+                  return (
+                    <InvoicePreview
+                      ref={previewRef}
+                      header={viewData.header}
+                      items={viewData.items}
+                      subtotal={prevSub}
+                      cgst={prevCgst}
+                      sgst={prevSgst}
+                      grandTotal={prevGrand}
+                      advance={prevAdv}
+                      netPayable={prevNet}
+                    />
+                  );
+                })()}
               </div>
             </div>
           </div>
