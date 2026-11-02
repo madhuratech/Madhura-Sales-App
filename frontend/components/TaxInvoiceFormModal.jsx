@@ -3,7 +3,7 @@ import { PlusCircle, X, RefreshCw, Eye, FileText } from "lucide-react";
 import api from "../services/api";
 
 const UOM_OPTIONS = ["Nos", "Hours", "Month", "Year", "Lumpsum"];
-const SERVICE_TYPES = ["CRM", "WEBSITE", "DM", "POSTERS"];
+const SERVICE_TYPES = ["CRM", "WEBSITE", "DM", "POSTERS", "SOFTWARE"];
 
 export default function TaxInvoiceFormModal({
   open,
@@ -467,19 +467,73 @@ export default function TaxInvoiceFormModal({
 
           {/* TOTALS SUMMARY */}
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-4 border-b border-gray-200">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={Boolean(header.without_tax)}
+                  onChange={e => setHeader(h => ({ ...h, without_tax: e.target.checked }))}
+                  className="w-4 h-4 text-[#0088CC] rounded border-gray-300 focus:ring-[#0088CC] cursor-pointer"
+                />
+                <span className="text-xs font-bold text-gray-700 uppercase">
+                  Without Tax Calculation
+                </span>
+              </label>
+
+              <div className="inline-flex rounded-lg p-1 bg-gray-200">
+                <button
+                  type="button"
+                  onClick={() => setHeader(h => ({ ...h, without_tax: false }))}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md transition ${
+                    !header.without_tax
+                      ? "bg-white text-[#0088CC] shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  With Tax (18%)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHeader(h => ({ ...h, without_tax: true }))}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md transition ${
+                    header.without_tax
+                      ? "bg-[#0088CC] text-white shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Without Tax
+                </button>
+              </div>
+            </div>
+
             <div className="max-w-md ml-auto space-y-2">
               <div className="flex justify-between text-sm text-gray-600">
                 <span>Subtotal</span>
                 <span className="font-semibold">₹{fmtNum(subtotal)}</span>
               </div>
-              <div className="flex justify-between text-sm text-gray-600">
-                <span>CGST 9%</span>
-                <span className="font-semibold">₹{fmtNum(cgst)}</span>
-              </div>
-              <div className="flex justify-between text-sm text-gray-600">
-                <span>SGST 9%</span>
-                <span className="font-semibold">₹{fmtNum(sgst)}</span>
-              </div>
+              {!header.without_tax ? (
+                <>
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>CGST 9%</span>
+                    <span className="font-semibold">₹{fmtNum(cgst)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>SGST 9%</span>
+                    <span className="font-semibold">₹{fmtNum(sgst)}</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-between text-sm text-gray-400">
+                    <span>CGST (0%)</span>
+                    <span className="font-semibold">₹0</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-gray-400">
+                    <span>SGST (0%)</span>
+                    <span className="font-semibold">₹0</span>
+                  </div>
+                </>
+              )}
               <div className="flex justify-between text-base font-bold text-gray-800 border-t pt-2">
                 <span>Grand Total</span>
                 <span>₹{fmtNum(grandTotal)}</span>
