@@ -125,75 +125,177 @@ app.get('/health', (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
-// Socket.io Connection Logic
-io.use((socket, next) => {
-  const token = socket.handshake.auth?.token || socket.handshake.query?.token;
-  const apiKey = socket.handshake.auth?.apiKey || socket.handshake.query?.apiKey || socket.handshake.headers?.['x-api-key'];
+// Socket.io Connection Logic with Strict Role & Client Isolation
+const STAFF_SOCKET_ROLES = [
+  'Super Admin',
+  'Admin',
+  'Manager',
+  'Field Executive',
+  'Project Manager',
+  'Team Lead',
+  'HR',
+  'Managing Director MD',
+  'COMPANY_ADMIN',
+  'SUPER_ADMIN',
+  'SUPPORT_MANAGER',
+  'SUPPORT_AGENT',
+];
+
+io.use(async (socket, next) => {
+  const token =
+    socket.handshake.auth?.token ||
+    socket.handshake.auth?.clientToken ||
+    socket.handshake.query?.token;
+  const apiKey =
+    socket.handshake.auth?.apiKey ||
+    socket.handshake.query?.apiKey ||
+    socket.handshake.headers?.['x-api-key'];
+  const clientIdHeader =
+    socket.handshake.auth?.clientId ||
+    socket.handshake.query?.clientId ||
+    socket.handshake.headers?.['x-client-id'];
 
   if (token) {
-    jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret_key_here', (err, decoded) => {
-      if (err) {
-        // Fallback to API Key if JWT token is invalid or expired
-        if (apiKey && (apiKey === 'crm_live_9981abc123' || apiKey === process.env.CRM_INTERNAL_API_KEY)) {
-          socket.userId = socket.handshake.auth?.userId || socket.handshake.query?.userId || 'portal_client';
-          socket.role = 'CLIENT';
-          socket.companyId = 'company_madhura';
-          return next();
-        }
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super_secret_jwt_key_123');
+      const isStaffRole =
+        STAFF_SOCKET_ROLES.includes(decoded.role) && !decoded.isClient && !decoded.clientId;
+
+      if (isStaffRole) {
+        socket.userId = decoded.id || decoded._id;
+        socket.role = decoded.role || 'Admin';
+        socket.isStaff = true;
+        socket.isClient = false;
+        socket.companyId = decoded.companyId || 'company_madhura';
+      } else {
+        const resolvedClientId = decoded.clientId || decoded.id;
+        socket.userId = decoded.id || decoded._id;
+        socket.clientId = resolvedClientId ? String(resolvedClientId) : null;
+        socket.role = 'CLIENT';
+        socket.isClient = true;
+        socket.isStaff = false;
+        socket.companyId = decoded.companyId || 'company_madhura';
+      }
+      return next();
+    } catch (err) {
+      if (!apiKey || (apiKey !== 'crm_live_9981abc123' && apiKey !== process.env.CRM_INTERNAL_API_KEY)) {
         return next(new Error('Authentication error - invalid token'));
       }
-      socket.userId = decoded.id;
-      socket.role = decoded.role || 'User';
-      socket.companyId = decoded.companyId || 'company_madhura';
-      next();
-    });
-  } else if (apiKey && (apiKey === 'crm_live_9981abc123' || apiKey === process.env.CRM_INTERNAL_API_KEY)) {
-    // Authenticate client portal or service via API key
-    socket.userId = socket.handshake.auth?.userId || socket.handshake.query?.userId || 'portal_client';
-    socket.role = 'CLIENT';
-    socket.companyId = 'company_madhura';
-    next();
-  } else {
-    next(new Error('Authentication error - token or api key not provided'));
+    }
   }
+
+  // API Key Authentication (Client Portal or Microservice)
+  if (apiKey && (apiKey === 'crm_live_9981abc123' || apiKey === process.env.CRM_INTERNAL_API_KEY)) {
+    const isClientContext = !!clientIdHeader;
+    if (isClientContext) {
+      socket.userId = String(clientIdHeader);
+      socket.clientId = String(clientIdHeader);
+      socket.role = 'CLIENT';
+      socket.isClient = true;
+      socket.isStaff = false;
+      socket.companyId = 'company_madhura';
+    } else {
+      socket.userId =
+        socket.handshake.auth?.userId || socket.handshake.query?.userId || 'api_service_staff';
+      socket.role = 'Admin';
+      socket.isStaff = true;
+      socket.isClient = false;
+      socket.companyId = 'company_madhura';
+    }
+    return next();
+  }
+
+  return next(new Error('Authentication error - token or api key required'));
 });
 
 io.on('connection', (socket) => {
-  console.log(`User connected to socket: ${socket.userId} (Role: ${socket.role || 'User'}, Company: ${socket.companyId})`);
-  // Scope user room to companyId
+  console.log(
+    `Socket connected: ${socket.id} (Role: ${socket.role}, isStaff: ${socket.isStaff}, isClient: ${socket.isClient}, ClientId: ${socket.clientId || 'N/A'})`
+  );
+
+  // Scoped user room
   socket.join(`${socket.companyId}_${socket.userId}`);
-  // Global company tickets room
-  socket.join(`${socket.companyId}_tickets`);
+
+  if (socket.isStaff) {
+    // Staff join staff rooms for alerts & global ticket notifications
+    socket.join('crm_staff_room');
+    socket.join(`${socket.companyId}_tickets`);
+  } else if (socket.isClient && socket.clientId) {
+    // Clients ONLY join their isolated client room
+    socket.join(`client_${socket.clientId}`);
+  }
 
   socket.on('join_chat', (roomId) => {
-    // Scope chat room to companyId
     socket.join(`${socket.companyId}_${roomId}`);
-    console.log(`User joined room: ${socket.companyId}_${roomId}`);
   });
 
-  // Ticket conversation room subscription
-  socket.on('join_ticket', (ticketId) => {
+  // Ticket conversation room subscription with strict authorization validation
+  socket.on('join_ticket', async (ticketId) => {
     if (!ticketId) return;
-    const room = `ticket_${ticketId}`;
-    socket.join(room);
-    console.log(`Socket ${socket.id} (${socket.userId}) joined ticket room: ${room}`);
+    try {
+      if (socket.isStaff) {
+        socket.join(`ticket_${ticketId}`);
+        console.log(`[Socket Auth] Staff ${socket.userId} joined room ticket_${ticketId}`);
+        return;
+      }
+
+      if (socket.isClient) {
+        if (!socket.clientId) {
+          socket.emit('socket_error', { code: 'UNAUTHORIZED', message: 'Client ID missing in session' });
+          return;
+        }
+
+        const Ticket = mongoose.model('Ticket');
+        const lookup = mongoose.Types.ObjectId.isValid(ticketId)
+          ? { _id: ticketId }
+          : { code: ticketId };
+
+        const ticket = await Ticket.findOne(lookup).select('client_id code');
+        if (!ticket) {
+          socket.emit('socket_error', { code: 'NOT_FOUND', message: 'Ticket not found' });
+          return;
+        }
+
+        const ticketClientId = ticket.client_id ? String(ticket.client_id) : null;
+        if (!ticketClientId || ticketClientId !== String(socket.clientId)) {
+          console.warn(
+            `[Socket Security ALERT] Socket ${socket.id} (client ${socket.clientId}) blocked from unauthorized ticket ${ticketId} (owned by ${ticketClientId})`
+          );
+          socket.emit('socket_error', {
+            code: 'UNAUTHORIZED_TICKET_ACCESS',
+            message: 'Access denied: You do not have permission to subscribe to this ticket',
+          });
+          return;
+        }
+
+        socket.join(`ticket_${ticket._id}`);
+        if (ticket.code) socket.join(`ticket_${ticket.code}`);
+        console.log(`[Socket Auth] Client ${socket.clientId} authorized and joined room ticket_${ticketId}`);
+        return;
+      }
+
+      socket.emit('socket_error', { code: 'UNAUTHORIZED', message: 'Authentication required' });
+    } catch (joinErr) {
+      console.error('[Socket join_ticket error]:', joinErr.message);
+    }
   });
 
   socket.on('leave_ticket', (ticketId) => {
     if (!ticketId) return;
-    const room = `ticket_${ticketId}`;
-    socket.leave(room);
-    console.log(`Socket ${socket.id} (${socket.userId}) left ticket room: ${room}`);
+    socket.leave(`ticket_${ticketId}`);
   });
 
   socket.on('ticket_typing', ({ ticketId, userName, isTyping }) => {
     if (!ticketId) return;
-    socket.to(`ticket_${ticketId}`).emit('ticket_typing', {
-      ticketId,
-      userId: socket.userId,
-      userName: userName || (socket.role === 'CLIENT' ? 'Client' : 'Agent'),
-      isTyping: !!isTyping
-    });
+    const roomName = `ticket_${ticketId}`;
+    if (socket.rooms && socket.rooms.has(roomName)) {
+      socket.to(roomName).emit('ticket_typing', {
+        ticketId,
+        userId: socket.userId,
+        userName: userName || (socket.isClient ? 'Client' : 'Agent'),
+        isTyping: !!isTyping,
+      });
+    }
   });
 
   socket.on('disconnect', () => {

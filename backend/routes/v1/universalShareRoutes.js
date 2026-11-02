@@ -25,13 +25,17 @@ const {
   getApprovals,
   createApproval,
   decideApproval,
-  handlePortalWebhook
+  handlePortalWebhook,
+  issueClientToken
 } = require('../../controllers/v1/universalShareController');
 
 // 1. Health Check (Public)
 router.get('/health', getHealth);
 
-// 2. Webhook Receiver (Signed payload)
+// 2. Client Authentication (Exchange client credentials for signed JWT)
+router.post('/auth/client-token', issueClientToken);
+
+// 3. Webhook Receiver (Signed payload)
 router.post('/webhooks/portal', handlePortalWebhook);
 
 // Protect all subsequent endpoints with API Key / JWT

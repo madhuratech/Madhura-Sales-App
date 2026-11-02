@@ -60,6 +60,8 @@ export default function SupportScreenWeb() {
   const [sourceFilter, setSourceFilter] = useState('CRM');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [priorityFilter, setPriorityFilter] = useState('ALL');
+  const [clientFilter, setClientFilter] = useState('ALL');
+  const [staffUsers, setStaffUsers] = useState([]);
   const [raiseModalOpen, setRaiseModalOpen] = useState(false);
   const [activeTicket, setActiveTicket] = useState(null);
   const [replyText, setReplyText] = useState('');
@@ -97,7 +99,16 @@ export default function SupportScreenWeb() {
     loadUser();
     fetchTickets();
     fetchClients();
+    fetchStaffUsers();
   }, []);
+
+  const fetchStaffUsers = async () => {
+    try {
+      const res = await api.get('/users');
+      const list = res.data?.data || res.data || [];
+      setStaffUsers(Array.isArray(list) ? list : []);
+    } catch (_) {}
+  };
 
   const fetchClients = async () => {
     try {
@@ -493,6 +504,25 @@ export default function SupportScreenWeb() {
     }
   };
 
+  const handleAssigneeChange = async (newAssigneeId) => {
+    if (!activeTicket) return;
+    try {
+      const res = await api.patch(`/v1/tickets/${activeTicket._id || activeTicket.id}`, {
+        assignee_id: newAssigneeId || null,
+      });
+      const updated = res.data?.data || res.data;
+      if (updated) {
+        setActiveTicket(updated);
+        setTickets((prev) =>
+          prev.map((t) => ((t._id || t.id) === (updated._id || updated.id) ? updated : t))
+        );
+      }
+      Toast.show({ type: 'success', text1: 'Assignee Updated', text2: 'Ticket assignment updated' });
+    } catch (err) {
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to update ticket assignee' });
+    }
+  };
+
   const getClientName = (ticket) => {
     const cid = ticket.client_id?._id || ticket.client_id || ticket.clientId;
     if (ticket.client_id?.businessName) return ticket.client_id.businessName;
@@ -520,6 +550,11 @@ export default function SupportScreenWeb() {
   const resolvedCount = baseTickets.filter((t) => ['RESOLVED', 'CLOSED'].includes((t.status || '').toUpperCase())).length;
 
   const filteredTickets = baseTickets.filter((t) => {
+    if (clientFilter !== 'ALL') {
+      const cid = t.client_id?._id || t.client_id || t.clientId;
+      if (String(cid) !== String(clientFilter)) return false;
+    }
+
     const s = (t.status || 'OPEN').toUpperCase();
     if (statusFilter !== 'ALL' && s !== statusFilter) return false;
 
@@ -531,7 +566,8 @@ export default function SupportScreenWeb() {
       const code = (t.code || '').toLowerCase();
       const title = (t.title || '').toLowerCase();
       const clientName = getClientName(t).toLowerCase();
-      return code.includes(q) || title.includes(q) || clientName.includes(q);
+      const clientEmail = (t.client_id?.email || t.creator?.email || '').toLowerCase();
+      return code.includes(q) || title.includes(q) || clientName.includes(q) || clientEmail.includes(q);
     }
     return true;
   });
@@ -743,6 +779,20 @@ export default function SupportScreenWeb() {
               <option value="MEDIUM">Medium</option>
               <option value="LOW">Low</option>
             </select>
+
+            {/* Client Filter Dropdown */}
+            <select
+              value={clientFilter}
+              onChange={(e) => setClientFilter(e.target.value)}
+              className="px-3 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl outline-none text-slate-700 cursor-pointer max-w-[170px] truncate"
+            >
+              <option value="ALL">All Clients ({clients.length})</option>
+              {clients.map((c) => (
+                <option key={c._id || c.id} value={c._id || c.id}>
+                  {c.businessName || c.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -947,6 +997,22 @@ export default function SupportScreenWeb() {
                     <option value="MEDIUM">Medium</option>
                     <option value="HIGH">High</option>
                     <option value="URGENT">Urgent</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-slate-500 uppercase">Assignee:</span>
+                  <select
+                    value={activeTicket.assignee_id?._id || activeTicket.assignee_id || ''}
+                    onChange={(e) => handleAssigneeChange(e.target.value)}
+                    className="font-bold border border-slate-300 rounded-lg px-2.5 py-1 text-xs outline-none bg-white cursor-pointer max-w-[150px] truncate"
+                  >
+                    <option value="">Unassigned</option>
+                    {staffUsers.map((u) => (
+                      <option key={u._id || u.id} value={u._id || u.id}>
+                        {u.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
