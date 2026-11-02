@@ -15,6 +15,12 @@ const ticketSchema = new mongoose.Schema({
     default: 'company_madhura',
     index: true
   },
+  source: {
+    type: String,
+    enum: ['CRM', 'PORTAL'],
+    default: 'CRM',
+    index: true
+  },
   code: { type: String, required: true },
   client_id: { type: mongoose.Schema.Types.ObjectId, ref: 'ClientOnboarding' },
   project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },

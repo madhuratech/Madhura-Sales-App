@@ -9,6 +9,7 @@ import Toast from 'react-native-toast-message';
 import * as Location from 'expo-location';
 import { performLogout } from '../utils/logout';
 import api from '../services/api';
+import RaiseTicketModal from './RaiseTicketModal';
 
 // ── Brand Tokens ──────────────────────────────────────────────────
 const NAVY   = '#1B2B4B';   // Madhura deep navy
@@ -58,6 +59,7 @@ const allAdminNavSections = [
       { title: 'Proforma Invoices', screen: 'ProformaInvoice',          icon: 'receipt-outline',   iconActive: 'receipt' },
       { title: 'Tax Invoices',      screen: 'Invoice',                  icon: 'wallet-outline',    iconActive: 'wallet' },
       { title: 'Payment Receipts',  screen: 'PaymentReceipt',           icon: 'card-outline',      iconActive: 'card' },
+      { title: 'CRM Tickets',       screen: 'Support',                  icon: 'ticket-outline',    iconActive: 'ticket' },
     ],
   },
   {
@@ -88,6 +90,7 @@ const employeeNavSections = [
       { title: 'Proforma Invoices', screen: 'ProformaInvoice',          icon: 'receipt-outline',   iconActive: 'receipt' },
       { title: 'Tax Invoices',      screen: 'Invoice',                  icon: 'wallet-outline',    iconActive: 'wallet' },
       { title: 'Payment Receipts',  screen: 'PaymentReceipt',           icon: 'card-outline',      iconActive: 'card' },
+      { title: 'CRM Tickets',       screen: 'Support',                  icon: 'ticket-outline',    iconActive: 'ticket' },
     ],
   },
   {
@@ -118,6 +121,7 @@ function buildNavSections(role) {
           { title: 'Field Staff Mgmt',  screen: 'UserManagement',           icon: 'people-outline',    iconActive: 'people' },
           { title: 'Client Onboarding', screen: 'ClientOnboarding',         icon: 'briefcase-outline', iconActive: 'briefcase' },
           { title: 'Products & Services', screen: 'Product',                icon: 'cube-outline',      iconActive: 'cube' },
+          { title: 'CRM Tickets',       screen: 'Support',                  icon: 'ticket-outline',    iconActive: 'ticket' },
         ],
       },
       {
@@ -161,6 +165,7 @@ export default function AppLayout({ children, currentScreen, scrollable = true, 
   const [unreadFollowUps, setUnreadFollowUps] = useState(0);
   const [unreadMeetings, setUnreadMeetings] = useState(0);
   const [unreadAttendance, setUnreadAttendance] = useState(0);
+  const [isRaiseTicketModalOpen, setIsRaiseTicketModalOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -433,6 +438,16 @@ export default function AppLayout({ children, currentScreen, scrollable = true, 
                   <Text style={styles.userName} numberOfLines={1}>{userName}</Text>
                 </View>
               </View>
+
+              {/* Quick Raise Ticket Action */}
+              <TouchableOpacity
+                onPress={() => setIsRaiseTicketModalOpen(true)}
+                style={styles.raiseTicketSidebarBtn}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="add-circle" size={17} color={NAVY} />
+                <Text style={styles.raiseTicketSidebarBtnText}>Raise Ticket</Text>
+              </TouchableOpacity>
             </View>
 
             {/* Nav Sections */}
@@ -522,6 +537,17 @@ export default function AppLayout({ children, currentScreen, scrollable = true, 
         </View>
 
         </View>
+
+        {/* Global Raise Ticket Modal Accessible from Anywhere */}
+        <RaiseTicketModal
+          visible={isRaiseTicketModalOpen}
+          onClose={() => setIsRaiseTicketModalOpen(false)}
+          onSuccess={() => {
+            if (currentScreen !== 'Support') {
+              router.push('/Support');
+            }
+          }}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -697,4 +723,29 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: '#fff', paddingHorizontal: 2,
   },
   dashBellBadgeText: { color: '#fff', fontSize: 8, fontWeight: '500' },
+
+  // Raise Ticket Sidebar Button
+  raiseTicketSidebarBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: GOLD,
+    marginTop: 12,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  raiseTicketSidebarBtnText: {
+    color: NAVY,
+    fontWeight: '800',
+    fontSize: 12,
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+  },
 });

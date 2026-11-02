@@ -1,5 +1,6 @@
-import AttendanceScreen from '../screens/AttendanceScreen';
+import React from 'react';
+import SupportScreen from '../screens/SupportScreen';
 
 export default function Support() {
-  return <AttendanceScreen />;
+  return <SupportScreen />;
 }

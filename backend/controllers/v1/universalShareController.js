@@ -7,6 +7,7 @@ const Payment = require('../../models/Payment');
 const Ticket = require('../../models/Ticket');
 const Approval = require('../../models/Approval');
 const User = require('../../models/User');
+const Notification = require('../../models/Notification');
 
 // --- 1. Health Check ---
 exports.getHealth = async (req, res) => {
@@ -355,15 +356,41 @@ exports.createPaymentIntent = async (req, res, next) => {
 exports.getTickets = async (req, res, next) => {
   try {
     const filter = {};
-    if (req.query.client_id && mongoose.Types.ObjectId.isValid(req.query.client_id)) {
-      filter.client_id = req.query.client_id;
+    const clientId = req.query.client_id || req.query.clientId;
+    if (clientId && mongoose.Types.ObjectId.isValid(clientId)) {
+      filter.client_id = clientId;
     }
-    if (req.query.status) {
+    if (req.query.status && req.query.status !== 'ALL') {
       filter.status = req.query.status.toUpperCase();
+    }
+    if (req.query.source && req.query.source !== 'ALL') {
+      const src = req.query.source.toUpperCase();
+      if (src === 'CRM') {
+        filter.$or = [
+          { source: 'CRM' },
+          { 'creator.email': { $regex: /madhuratech\.com/i } },
+          { 'creator.name': 'Administrator' },
+        ];
+      } else if (src === 'PORTAL') {
+        filter.$and = [
+          { source: { $ne: 'CRM' } },
+          { 'creator.email': { $not: { $regex: /madhuratech\.com/i } } },
+          { 'creator.name': { $ne: 'Administrator' } },
+        ];
+      } else {
+        filter.source = src;
+      }
     }
 
     const tickets = await Ticket.find(filter).sort({ updatedAt: -1 }).lean();
-    res.status(200).json({ success: true, count: tickets.length, data: tickets });
+    const formattedTickets = tickets.map((t) => ({
+      ...t,
+      id: t._id,
+      clientId: t.client_id,
+      projectId: t.project_id,
+      source: t.source || (t.creator?.email?.includes('madhuratech.com') || t.creator?.name === 'Administrator' ? 'CRM' : 'PORTAL'),
+    }));
+    res.status(200).json({ success: true, count: formattedTickets.length, data: formattedTickets });
   } catch (error) {
     next(error);
   }
@@ -371,10 +398,19 @@ exports.getTickets = async (req, res, next) => {
 
 exports.getTicketById = async (req, res, next) => {
   try {
-    const ticket = await Ticket.findById(req.params.id).lean();
+    let ticket = null;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      ticket = await Ticket.findById(req.params.id).lean();
+    }
+    if (!ticket) {
+      ticket = await Ticket.findOne({ code: req.params.id }).lean();
+    }
     if (!ticket) {
       return res.status(404).json({ success: false, error: { code: 'not_found', message: 'Ticket not found' } });
     }
+    ticket.id = ticket._id;
+    ticket.clientId = ticket.client_id;
+    ticket.projectId = ticket.project_id;
     res.status(200).json({ success: true, data: ticket });
   } catch (error) {
     next(error);
@@ -383,36 +419,70 @@ exports.getTicketById = async (req, res, next) => {
 
 exports.createTicket = async (req, res, next) => {
   try {
-    const { client_id, project_id, title, description, category, priority, author_name, author_email } = req.body;
+    const rawClientId = req.body.client_id || req.body.clientId;
+    const rawProjectId = req.body.project_id || req.body.projectId;
+    const { title, description, category, priority, author_name, author_email } = req.body;
     if (!title || !description) {
       return res.status(400).json({ success: false, message: 'Title and description are required' });
     }
 
+    const clientId = (rawClientId && mongoose.Types.ObjectId.isValid(rawClientId)) ? rawClientId : null;
+    const projectId = (rawProjectId && mongoose.Types.ObjectId.isValid(rawProjectId)) ? rawProjectId : null;
+
     const count = await Ticket.countDocuments();
     const code = `TCK-${1000 + count + 1}`;
+    const source = req.body.source || (req.user && ['Admin', 'Managing Director MD', 'Project Manager', 'Team Lead', 'Field Executive', 'HR'].includes(req.user.role) ? 'CRM' : 'PORTAL');
 
     const newTicket = await Ticket.create({
       code,
-      client_id: client_id || null,
-      project_id: project_id || null,
+      client_id: clientId,
+      project_id: projectId,
       title,
       description,
       category: category || 'GENERAL',
       priority: priority || 'MEDIUM',
       status: 'OPEN',
+      source,
       creator: {
-        name: author_name || 'Client',
-        email: author_email || ''
+        name: author_name || (req.user ? req.user.name : 'Client'),
+        email: author_email || (req.user ? req.user.email : '')
       },
       messages: [{
-        sender: 'CLIENT',
-        author_name: author_name || 'Client',
-        author_email: author_email || '',
+        sender: (req.user && ['Admin', 'Managing Director MD', 'Project Manager', 'Team Lead', 'Field Executive', 'HR'].includes(req.user.role)) ? 'STAFF' : 'CLIENT',
+        author_name: author_name || (req.user ? req.user.name : 'Client'),
+        author_email: author_email || (req.user ? req.user.email : ''),
         message: description
       }]
     });
 
-    res.status(201).json({ success: true, data: newTicket });
+    const ticketObj = newTicket.toObject ? newTicket.toObject() : newTicket;
+    ticketObj.id = ticketObj._id;
+    ticketObj.clientId = ticketObj.client_id;
+    ticketObj.projectId = ticketObj.project_id;
+
+    // Real-time broadcast and notify admins if available
+    try {
+      if (req.io) {
+        req.io.emit('ticket_created', ticketObj);
+      }
+      const admins = await User.find({ role: { $in: ['Admin', 'Managing Director MD'] }, isActive: true }).select('_id');
+      await Promise.all(
+        admins.map(async (admin) => {
+          const notif = await Notification.create({
+            recipient: admin._id,
+            sender: req.user ? req.user.id : admin._id,
+            title: `New Support Ticket: ${code}`,
+            message: `${author_name || 'Client'} raised a ticket: "${title}"`,
+            type: 'Info',
+          });
+          if (req.io) req.io.to(admin._id.toString()).emit('notification', notif);
+        })
+      );
+    } catch (notifErr) {
+      console.warn('Notification/Socket dispatch warning on createTicket:', notifErr.message);
+    }
+
+    res.status(201).json({ success: true, data: ticketObj });
   } catch (error) {
     next(error);
   }
@@ -420,27 +490,103 @@ exports.createTicket = async (req, res, next) => {
 
 exports.addTicketMessage = async (req, res, next) => {
   try {
-    const { message, author_name, author_email, sender_type, internal } = req.body;
+    const { message, author_name, author_email, sender_type, internal, clientMessageId } = req.body;
     if (!message) {
       return res.status(400).json({ success: false, message: 'Message content is required' });
     }
 
-    const ticket = await Ticket.findById(req.params.id);
+    let ticket = null;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      ticket = await Ticket.findById(req.params.id);
+    }
+    if (!ticket) {
+      ticket = await Ticket.findOne({ code: req.params.id });
+    }
     if (!ticket) {
       return res.status(404).json({ success: false, error: { code: 'not_found', message: 'Ticket not found' } });
     }
 
-    ticket.messages.push({
-      sender: sender_type === 'STAFF' ? 'STAFF' : 'CLIENT',
-      author_name: author_name || 'Support Staff',
-      author_email: author_email || '',
+    const sender = sender_type === 'STAFF' ? 'STAFF' : 'CLIENT';
+    const author = author_name || (sender === 'STAFF' ? (req.user?.name || 'Support Staff') : 'Client');
+    const email = author_email || (req.user?.email || '');
+
+    const newMsgDoc = {
+      sender,
+      author_name: author,
+      author_email: email,
       message,
-      internal: !!internal
-    });
+      internal: !!internal,
+      created_at: new Date()
+    };
+
+    ticket.messages.push(newMsgDoc);
     ticket.updated_at = new Date();
+
+    // Auto-update ticket status when client replies
+    if (sender === 'CLIENT') {
+      if (['RESOLVED', 'CLOSED'].includes(ticket.status)) {
+        ticket.status = 'OPEN';
+      }
+    } else if (sender === 'STAFF' && !internal) {
+      if (ticket.status === 'OPEN') {
+        ticket.status = 'IN_PROGRESS';
+      }
+    }
     await ticket.save();
 
-    res.status(201).json({ success: true, message: 'Reply posted', data: ticket });
+    const ticketObj = ticket.toObject ? ticket.toObject() : ticket;
+    ticketObj.id = ticketObj._id;
+    ticketObj.clientId = ticketObj.client_id;
+    ticketObj.projectId = ticketObj.project_id;
+    ticketObj.source = ticketObj.source || (ticketObj.creator?.email?.includes('madhuratech.com') || ticketObj.creator?.name === 'Administrator' ? 'CRM' : 'PORTAL');
+
+    const createdMsg = ticketObj.messages[ticketObj.messages.length - 1];
+
+    if (req.io) {
+      const messagePayload = {
+        ticketId: ticketObj.id.toString(),
+        ticketCode: ticketObj.code,
+        clientMessageId: clientMessageId || null,
+        message: createdMsg,
+        ticket: ticketObj,
+      };
+
+      // 1. Emit to ticket-specific rooms (by ID and by code)
+      req.io.to(`ticket_${ticketObj.id}`).emit('new_ticket_message', messagePayload);
+      if (ticketObj.code) {
+        req.io.to(`ticket_${ticketObj.code}`).emit('new_ticket_message', messagePayload);
+      }
+
+      // 2. Broadcast to company ticket room and global
+      req.io.to('company_madhura_tickets').emit('new_ticket_message', messagePayload);
+      req.io.emit('new_ticket_message', messagePayload);
+      req.io.emit('ticket_updated', ticketObj);
+
+      // 3. If reply is from CLIENT, dispatch notification to CRM admins
+      if (sender === 'CLIENT') {
+        try {
+          const User = mongoose.model('User');
+          const Notification = mongoose.model('Notification');
+          const admins = await User.find({ role: { $in: ['Admin', 'Managing Director MD', 'Project Manager', 'Team Lead'] }, isActive: true }).select('_id');
+          await Promise.all(
+            admins.map(async (admin) => {
+              const notif = await Notification.create({
+                recipient: admin._id,
+                sender: admin._id,
+                title: `New Reply on ${ticket.code}`,
+                message: `${author}: "${message.substring(0, 80)}"`,
+                type: 'Info',
+              });
+              req.io.to(admin._id.toString()).emit('notification', notif);
+            })
+          );
+        } catch (notifErr) {
+          console.warn('Notification error on client ticket message:', notifErr.message);
+        }
+      }
+    }
+
+    res.status(201).json({ success: true, message: 'Reply posted', data: ticketObj, messageData: createdMsg });
   } catch (error) {
     next(error);
   }
@@ -455,11 +601,33 @@ exports.updateTicketStatus = async (req, res, next) => {
     if (assignee_id) updateData.assignee_id = assignee_id;
     updateData.updated_at = new Date();
 
-    const ticket = await Ticket.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    let ticket = null;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      ticket = await Ticket.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    }
+    if (!ticket) {
+      ticket = await Ticket.findOneAndUpdate({ code: req.params.id }, updateData, { new: true });
+    }
     if (!ticket) {
       return res.status(404).json({ success: false, error: { code: 'not_found', message: 'Ticket not found' } });
     }
-    res.status(200).json({ success: true, data: ticket });
+
+    const ticketObj = ticket.toObject ? ticket.toObject() : ticket;
+    ticketObj.id = ticketObj._id;
+    ticketObj.clientId = ticketObj.client_id;
+    ticketObj.projectId = ticketObj.project_id;
+    ticketObj.source = ticketObj.source || (ticketObj.creator?.email?.includes('madhuratech.com') || ticketObj.creator?.name === 'Administrator' ? 'CRM' : 'PORTAL');
+
+    if (req.io) {
+      req.io.to(`ticket_${ticketObj.id}`).emit('ticket_updated', ticketObj);
+      if (ticketObj.code) {
+        req.io.to(`ticket_${ticketObj.code}`).emit('ticket_updated', ticketObj);
+      }
+      req.io.to('company_madhura_tickets').emit('ticket_updated', ticketObj);
+      req.io.emit('ticket_updated', ticketObj);
+    }
+
+    res.status(200).json({ success: true, data: ticketObj });
   } catch (error) {
     next(error);
   }
