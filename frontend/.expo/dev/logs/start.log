@@ -89819,3 +89819,29 @@
 {"_e":"metro:client_log","_t":1793598365457,"level":"error","data":["Invalid style property of \"outline\". Please use long-form properties.","\n\n\u001b[1mCode: RaiseTicketModal.jsx\u001b[22m\n\u001b[0m \u001b[90m 443 |\u001b[39m }\n \u001b[90m 444 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 445 |\u001b[39m \u001b[36mconst\u001b[39m styles \u001b[33m=\u001b[39m \u001b[33mStyleSheet\u001b[39m\u001b[33m.\u001b[39mcreate({\n \u001b[90m     |\u001b[39m                           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 446 |\u001b[39m   backdrop\u001b[33m:\u001b[39m {\n \u001b[90m 447 |\u001b[39m     flex\u001b[33m:\u001b[39m \u001b[35m1\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 448 |\u001b[39m     backgroundColor\u001b[33m:\u001b[39m \u001b[32m'rgba(15, 23, 42, 0.65)'\u001b[39m\u001b[33m,\u001b[39m\u001b[0m\n\u001b[1mCall Stack\u001b[22m\n\u001b[90m  <global> (\u001b]8;;components/RaiseTicketModal.jsx:445:27\u0007components/RaiseTicketModal.jsx:445:27\u001b]8;;\u0007)\u001b[39m"]}
 {"_e":"metro:client_log","_t":1793598375695,"level":"error","data":["Invalid style property of \"outline\". Please use long-form properties.","\n\n\u001b[1mCode: RaiseTicketModal.jsx\u001b[22m\n\u001b[0m \u001b[90m 457 |\u001b[39m }\u001b[33m;\u001b[39m\n \u001b[90m 458 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 459 |\u001b[39m \u001b[36mconst\u001b[39m styles \u001b[33m=\u001b[39m \u001b[33mStyleSheet\u001b[39m\u001b[33m.\u001b[39mcreate({\n \u001b[90m     |\u001b[39m                           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 460 |\u001b[39m   backdrop\u001b[33m:\u001b[39m {\n \u001b[90m 461 |\u001b[39m     flex\u001b[33m:\u001b[39m \u001b[35m1\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 462 |\u001b[39m     backgroundColor\u001b[33m:\u001b[39m \u001b[32m'rgba(15, 23, 42, 0.65)'\u001b[39m\u001b[33m,\u001b[39m\u001b[0m\n\u001b[1mCall Stack\u001b[22m\n\u001b[90m  <global> (\u001b]8;;components/RaiseTicketModal.jsx:459:27\u0007components/RaiseTicketModal.jsx:459:27\u001b]8;;\u0007)\u001b[39m"]}
 {"_e":"metro:client_log","_t":1793615368259,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:bundling:started","_t":1793620516182,"id":"1t","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793620516187,"id":"1t","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1793620516228,"id":"1t","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1793620516956,"id":"1t","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793620517423,"id":"1t","total":1,"ms":1239.639542}
+{"_e":"metro:bundling:started","_t":1793620517799,"id":"1u","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793620517799,"id":"1u","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793620517987,"id":"1u","total":1,"ms":187.962872}
+{"_e":"metro:client_log","_t":1793620518117,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1793620518237,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
+{"_e":"metro:client_log","_t":1793620518326,"level":"warn","data":["[expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality."]}
+{"_e":"metro:client_log","_t":1793620518907,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"metro:client_log","_t":1793620519043,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:client_log","_t":1793620519063,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:bundling:started","_t":1793622145875,"id":"1z","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793622145876,"id":"1z","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793622146100,"id":"1z","total":1,"ms":223.657453}
+{"_e":"metro:bundling:started","_t":1793622146561,"id":"20","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793622146561,"id":"20","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793622146726,"id":"20","total":1,"ms":164.985953}
+{"_e":"metro:client_log","_t":1793622146772,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1793622146867,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
+{"_e":"metro:client_log","_t":1793622146926,"level":"warn","data":["[expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality."]}
+{"_e":"metro:client_log","_t":1793622147303,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"metro:client_log","_t":1793622147418,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:client_log","_t":1793622147439,"level":"log","data":["Mobile connected to Socket.io"]}
