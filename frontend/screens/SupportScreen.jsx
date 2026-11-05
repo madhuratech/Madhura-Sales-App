@@ -44,7 +44,6 @@ export default function SupportScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
-  const [sourceFilter, setSourceFilter] = useState('CRM');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [raiseModalOpen, setRaiseModalOpen] = useState(false);
   const [isSocketConnected, setIsSocketConnected] = useState(false);
@@ -116,6 +115,7 @@ export default function SupportScreen() {
 
       const handleTicketCreated = (newTicket) => {
         if (!newTicket || !isMounted) return;
+        if (newTicket.source && newTicket.source !== 'CRM') return;
         setTickets((prev) => {
           const exists = prev.some(
             (t) => String(t._id || t.id) === String(newTicket._id || newTicket.id) || t.code === newTicket.code
@@ -180,7 +180,7 @@ export default function SupportScreen() {
 
   const fetchTickets = useCallback(async () => {
     try {
-      const res = await api.get('/v1/tickets');
+      const res = await api.get('/v1/tickets?source=CRM');
       setTickets(res.data?.data || []);
     } catch (err) {
       console.warn('Failed to fetch tickets:', err);
@@ -212,9 +212,7 @@ export default function SupportScreen() {
     );
   };
 
-  const crmTickets = tickets.filter(isStaffCreator);
-  const portalTickets = tickets.filter((t) => !isStaffCreator(t));
-  const baseTickets = sourceFilter === 'CRM' ? crmTickets : sourceFilter === 'PORTAL' ? portalTickets : tickets;
+  const baseTickets = tickets.filter(isStaffCreator);
 
   const filteredTickets = baseTickets.filter((t) => {
     const s = (t.status || 'OPEN').toUpperCase();
@@ -261,45 +259,6 @@ export default function SupportScreen() {
           >
             <Ionicons name="add" size={18} color="#fff" />
             <Text style={styles.raiseBtnText}>Raise</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Source Filter Switcher */}
-        <View style={{ flexDirection: 'row', gap: 8, marginHorizontal: 16, marginTop: 12 }}>
-          <TouchableOpacity
-            onPress={() => setSourceFilter('CRM')}
-            style={[
-              { flex: 1, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f1f5f9' },
-              sourceFilter === 'CRM' && { backgroundColor: NAVY }
-            ]}
-          >
-            <Text style={[{ fontSize: 12, fontWeight: '700', color: '#475569' }, sourceFilter === 'CRM' && { color: '#fff' }]}>
-              CRM ({crmTickets.length})
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setSourceFilter('PORTAL')}
-            style={[
-              { flex: 1, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f1f5f9' },
-              sourceFilter === 'PORTAL' && { backgroundColor: NAVY }
-            ]}
-          >
-            <Text style={[{ fontSize: 12, fontWeight: '700', color: '#475569' }, sourceFilter === 'PORTAL' && { color: '#fff' }]}>
-              Portal ({portalTickets.length})
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setSourceFilter('ALL')}
-            style={[
-              { flex: 1, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f1f5f9' },
-              sourceFilter === 'ALL' && { backgroundColor: NAVY }
-            ]}
-          >
-            <Text style={[{ fontSize: 12, fontWeight: '700', color: '#475569' }, sourceFilter === 'ALL' && { color: '#fff' }]}>
-              All ({tickets.length})
-            </Text>
           </TouchableOpacity>
         </View>
 

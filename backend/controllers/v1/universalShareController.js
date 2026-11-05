@@ -8,6 +8,7 @@ const Ticket = require('../../models/Ticket');
 const Approval = require('../../models/Approval');
 const User = require('../../models/User');
 const Notification = require('../../models/Notification');
+const { uploadToCloudinary } = require('../../utils/helpers');
 
 // --- 1. Health Check ---
 exports.getHealth = async (req, res) => {
@@ -411,50 +412,163 @@ exports.issueClientToken = async (req, res, next) => {
   }
 };
 
+// --- 6. Questions / Support Tickets Privacy & RBAC Helpers ---
+
+// Helper: Get subordinate user IDs for a manager
+async function getSubordinateUserIds(userId) {
+  try {
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) return [];
+    const directReports = await User.find({ manager: userId, isActive: true }).select('_id');
+    return directReports.map(u => u._id);
+  } catch (err) {
+    console.error('Error fetching subordinates:', err.message);
+    return [];
+  }
+}
+
+// Helper: Build strict MongoDB filter based on user role and privacy scope
+async function buildUserTicketFilter(user, baseFilter = {}) {
+  const isClient = user?.isClient || user?.role === 'CLIENT';
+  if (isClient) {
+    if (!user?.clientId || !mongoose.Types.ObjectId.isValid(user.clientId)) {
+      const err = new Error('Unauthorized client context');
+      err.statusCode = 403;
+      throw err;
+    }
+    return { ...baseFilter, client_id: new mongoose.Types.ObjectId(user.clientId) };
+  }
+
+  // 1. CRM Admin: Access to all tickets
+  if (user?.isAdmin) {
+    return { ...baseFilter };
+  }
+
+  // 2. Support Manager / Team Lead: Access to tickets created by or assigned to self or subordinates
+  if (user?.isManager) {
+    const subIds = await getSubordinateUserIds(user.id);
+    const accessibleUserIds = [new mongoose.Types.ObjectId(user.id), ...subIds];
+    const managerScope = {
+      $or: [
+        { created_by: { $in: accessibleUserIds } },
+        { assignee_id: { $in: accessibleUserIds } },
+      ],
+    };
+    if (Object.keys(baseFilter).length > 0) {
+      return { $and: [baseFilter, managerScope] };
+    }
+    return managerScope;
+  }
+
+  // 3. Regular CRM Staff (Field Executive, user, etc.):
+  // Can ONLY access tickets they created OR that are assigned directly to them!
+  const userIdObj = mongoose.Types.ObjectId.isValid(user?.id)
+    ? new mongoose.Types.ObjectId(user.id)
+    : user?.id;
+
+  const userScope = {
+    $or: [
+      { created_by: userIdObj },
+      { assignee_id: userIdObj },
+    ],
+  };
+
+  if (Object.keys(baseFilter).length > 0) {
+    return { $and: [baseFilter, userScope] };
+  }
+  return userScope;
+}
+
+// Helper: Verify whether a user can access, message, update, or delete a ticket
+async function canUserAccessTicket(user, ticket, action = 'read') {
+  if (!user || !ticket) return false;
+
+  // 1. Client user check
+  const isClient = user.isClient || user.role === 'CLIENT';
+  if (isClient) {
+    const ticketClientId = ticket.client_id?._id || ticket.client_id;
+    if (!ticketClientId || String(ticketClientId) !== String(user.clientId)) {
+      return false;
+    }
+    // Clients cannot delete tickets
+    if (action === 'delete') return false;
+    return true;
+  }
+
+  // 2. Admin has full access to any ticket
+  if (user.isAdmin) return true;
+
+  const userIdStr = String(user.id || user._id);
+  const createdByStr = ticket.created_by ? String(ticket.created_by._id || ticket.created_by) : null;
+  const assigneeIdStr = ticket.assignee_id ? String(ticket.assignee_id._id || ticket.assignee_id) : null;
+
+  // Creator or Assignee has access
+  const isDirectOwner = (createdByStr === userIdStr || assigneeIdStr === userIdStr);
+  if (isDirectOwner) {
+    // Regular users can only delete if they created it AND status is still OPEN
+    if (action === 'delete') {
+      return createdByStr === userIdStr && ticket.status === 'OPEN';
+    }
+    return true;
+  }
+
+  // 3. Manager check (subordinates)
+  if (user.isManager) {
+    const subIds = await getSubordinateUserIds(user.id);
+    const subIdStrs = subIds.map(id => String(id));
+    const isSubordinateTicket = (
+      (createdByStr && subIdStrs.includes(createdByStr)) ||
+      (assigneeIdStr && subIdStrs.includes(assigneeIdStr))
+    );
+    if (isSubordinateTicket) {
+      if (action === 'delete') return false; // Only Admin or original creator can delete
+      return true;
+    }
+  }
+
+  return false;
+}
+
+exports.buildUserTicketFilter = buildUserTicketFilter;
+exports.canUserAccessTicket = canUserAccessTicket;
+
 // --- 6. Questions / Support Tickets Endpoints ---
 exports.getTickets = async (req, res, next) => {
   try {
-    const filter = {};
     const isClient = req.user?.isClient || req.user?.role === 'CLIENT';
     const isStaff = req.user?.isStaff;
 
-    // 1. Strict Isolation: Clients can ONLY ever query their own client_id
-    if (isClient) {
-      if (!req.user.clientId || !mongoose.Types.ObjectId.isValid(req.user.clientId)) {
-        return res.status(403).json({
-          success: false,
-          error: { code: 'forbidden', message: 'Unauthorized client context' }
-        });
-      }
-      filter.client_id = req.user.clientId;
-    } else if (isStaff) {
-      // CRM Staff can optionally filter by client_id
-      const queryClientId = req.query.client_id || req.query.clientId;
-      if (queryClientId && mongoose.Types.ObjectId.isValid(queryClientId)) {
-        filter.client_id = queryClientId;
-      }
-    } else {
+    if (!isClient && !isStaff) {
       return res.status(401).json({
         success: false,
         error: { code: 'unauthorized', message: 'Authentication required' }
       });
     }
 
+    const baseFilter = {};
+
+    // If Admin/Manager supplied a client_id query param:
+    if (isStaff) {
+      const queryClientId = req.query.client_id || req.query.clientId;
+      if (queryClientId && mongoose.Types.ObjectId.isValid(queryClientId)) {
+        baseFilter.client_id = new mongoose.Types.ObjectId(queryClientId);
+      }
+    }
+
     // Status filter
     if (req.query.status && req.query.status !== 'ALL') {
-      filter.status = req.query.status.toUpperCase();
+      baseFilter.status = req.query.status.toUpperCase();
     }
 
     // Priority filter
     if (req.query.priority && req.query.priority !== 'ALL') {
-      filter.priority = req.query.priority.toUpperCase();
+      baseFilter.priority = req.query.priority.toUpperCase();
     }
 
     // Search query filter (search by code, title, client name, email)
     if (req.query.search && req.query.search.trim()) {
       const q = req.query.search.trim();
       const regex = new RegExp(q, 'i');
-      filter.$or = [
+      baseFilter.$or = [
         { code: regex },
         { title: regex },
         { 'creator.name': regex },
@@ -466,15 +580,19 @@ exports.getTickets = async (req, res, next) => {
     if (req.query.source && req.query.source !== 'ALL') {
       const src = req.query.source.toUpperCase();
       if (src === 'CRM') {
-        filter.source = 'CRM';
+        baseFilter.source = 'CRM';
       } else if (src === 'PORTAL') {
-        filter.source = { $ne: 'CRM' };
+        baseFilter.source = { $ne: 'CRM' };
       }
     }
 
+    // Apply role-based privacy filter
+    const filter = await buildUserTicketFilter(req.user, baseFilter);
+
     const tickets = await Ticket.find(filter)
       .populate('client_id', 'businessName ownerName email phone name company_name')
-      .populate('assignee_id', 'name email designation')
+      .populate('assignee_id', 'name email designation role')
+      .populate('created_by', 'name email designation role')
       .sort({ updatedAt: -1, updated_at: -1 })
       .lean();
 
@@ -486,6 +604,8 @@ exports.getTickets = async (req, res, next) => {
         id: t._id,
         clientId: t.client_id?._id || t.client_id,
         projectId: t.project_id,
+        createdById: t.created_by?._id || t.created_by,
+        assigneeId: t.assignee_id?._id || t.assignee_id,
         messages: msgs,
         source: t.source || (t.creator?.email?.includes('madhuratech.com') || t.creator?.name === 'Administrator' ? 'CRM' : 'PORTAL'),
       };
@@ -493,47 +613,49 @@ exports.getTickets = async (req, res, next) => {
 
     res.status(200).json({ success: true, count: formattedTickets.length, data: formattedTickets });
   } catch (error) {
+    if (error.statusCode === 403) {
+      return res.status(403).json({ success: false, error: { code: 'forbidden', message: error.message } });
+    }
     next(error);
   }
 };
 
 exports.getTicketById = async (req, res, next) => {
   try {
-    let ticket = null;
     const lookup = mongoose.Types.ObjectId.isValid(req.params.id)
       ? { _id: req.params.id }
       : { code: req.params.id };
 
-    ticket = await Ticket.findOne(lookup)
+    const ticket = await Ticket.findOne(lookup)
       .populate('client_id', 'businessName ownerName email phone name company_name')
-      .populate('assignee_id', 'name email designation')
+      .populate('assignee_id', 'name email designation role')
+      .populate('created_by', 'name email designation role')
       .lean();
 
     if (!ticket) {
       return res.status(404).json({ success: false, error: { code: 'not_found', message: 'Ticket not found' } });
     }
 
-    const isClient = req.user?.isClient || req.user?.role === 'CLIENT';
-    const isStaff = req.user?.isStaff;
+    // Role-based privacy validation
+    const hasAccess = await canUserAccessTicket(req.user, ticket, 'read');
+    if (!hasAccess) {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'forbidden', message: 'Access denied: You do not have permission to view this ticket' }
+      });
+    }
 
-    // Strict IDOR Prevention: If caller is a client, verify ownership
+    const isClient = req.user?.isClient || req.user?.role === 'CLIENT';
     if (isClient) {
-      const ticketClientId = ticket.client_id?._id || ticket.client_id;
-      if (!ticketClientId || String(ticketClientId) !== String(req.user.clientId)) {
-        return res.status(403).json({
-          success: false,
-          error: { code: 'forbidden', message: 'Access denied: You do not have permission to view this ticket' }
-        });
-      }
-      // Strip internal staff notes from client view
       ticket.messages = (ticket.messages || []).filter((m) => !m.internal);
-    } else if (!isStaff) {
-      return res.status(401).json({ success: false, error: { code: 'unauthorized', message: 'Authentication required' } });
     }
 
     ticket.id = ticket._id;
     ticket.clientId = ticket.client_id?._id || ticket.client_id;
     ticket.projectId = ticket.project_id;
+    ticket.createdById = ticket.created_by?._id || ticket.created_by;
+    ticket.assigneeId = ticket.assignee_id?._id || ticket.assignee_id;
+
     res.status(200).json({ success: true, data: ticket });
   } catch (error) {
     next(error);
@@ -542,7 +664,7 @@ exports.getTicketById = async (req, res, next) => {
 
 exports.createTicket = async (req, res, next) => {
   try {
-    const { title, description, category, priority, author_name, author_email, project_id, projectId } = req.body;
+    const { title, description, category, priority, author_name, author_email, project_id, projectId, assignee_id } = req.body;
     if (!title || !description) {
       return res.status(400).json({ success: false, message: 'Title and description are required' });
     }
@@ -553,10 +675,10 @@ exports.createTicket = async (req, res, next) => {
     let clientId = null;
     let source = 'PORTAL';
     let creator = {};
+    let createdBy = null;
+    let initialAssignee = null;
 
     if (isClient) {
-      // Automatic client assignment from cryptographically verified identity
-      // Never allow clients to override or supply another client's id
       if (!req.user.clientId || !mongoose.Types.ObjectId.isValid(req.user.clientId)) {
         return res.status(403).json({
           success: false,
@@ -569,14 +691,20 @@ exports.createTicket = async (req, res, next) => {
         name: req.user.name || author_name || 'Client',
         email: req.user.email || author_email || '',
       };
+      createdBy = null;
     } else if (isStaff) {
       const rawClientId = req.body.client_id || req.body.clientId;
       clientId = (rawClientId && mongoose.Types.ObjectId.isValid(rawClientId)) ? rawClientId : null;
       source = req.body.source || 'CRM';
       creator = {
+        contact_id: req.user.id,
         name: req.user.name || author_name || 'Support Staff',
         email: req.user.email || author_email || '',
       };
+      createdBy = req.user.id;
+      if (assignee_id && mongoose.Types.ObjectId.isValid(assignee_id)) {
+        initialAssignee = assignee_id;
+      }
     } else {
       return res.status(401).json({ success: false, error: { code: 'unauthorized', message: 'Authentication required' } });
     }
@@ -589,8 +717,10 @@ exports.createTicket = async (req, res, next) => {
 
     const newTicket = await Ticket.create({
       code,
+      created_by: createdBy,
       client_id: clientId,
       project_id: resolvedProjectId,
+      assignee_id: initialAssignee,
       title,
       description,
       category: category || 'GENERAL',
@@ -600,6 +730,7 @@ exports.createTicket = async (req, res, next) => {
       creator,
       messages: [{
         sender: isStaff ? 'STAFF' : 'CLIENT',
+        sender_id: req.user?.id && mongoose.Types.ObjectId.isValid(req.user.id) ? req.user.id : undefined,
         author_name: creator.name,
         author_email: creator.email,
         internal: false,
@@ -609,7 +740,8 @@ exports.createTicket = async (req, res, next) => {
 
     const populated = await Ticket.findById(newTicket._id)
       .populate('client_id', 'businessName ownerName email phone name company_name')
-      .populate('assignee_id', 'name email designation')
+      .populate('assignee_id', 'name email designation role')
+      .populate('created_by', 'name email designation role')
       .lean();
 
     const ticketObj = {
@@ -617,13 +749,22 @@ exports.createTicket = async (req, res, next) => {
       id: populated._id,
       clientId: populated.client_id?._id || populated.client_id,
       projectId: populated.project_id,
+      createdById: populated.created_by?._id || populated.created_by,
+      assigneeId: populated.assignee_id?._id || populated.assignee_id,
     };
 
-    // Emit event ONLY to staff room and this specific client room!
+    // Emit event ONLY to authorized rooms!
     if (req.io) {
       try {
-        req.io.to('crm_staff_room').emit('ticket_created', ticketObj);
+        req.io.to('crm_admin_room').emit('ticket_created', ticketObj);
         req.io.to('company_madhura_tickets').emit('ticket_created', ticketObj);
+
+        if (createdBy) {
+          req.io.to(`user_${createdBy}`).emit('ticket_created', ticketObj);
+        }
+        if (initialAssignee) {
+          req.io.to(`user_${initialAssignee}`).emit('ticket_created', ticketObj);
+        }
         if (clientId) {
           req.io.to(`client_${clientId}`).emit('ticket_created', ticketObj);
         }
@@ -634,7 +775,7 @@ exports.createTicket = async (req, res, next) => {
           admins.map(async (admin) => {
             const notif = await Notification.create({
               recipient: admin._id,
-              sender: isStaff ? req.user.id : admin._id,
+              sender: isStaff && req.user?.id && mongoose.Types.ObjectId.isValid(req.user.id) ? req.user.id : admin._id,
               title: `New Support Ticket: ${code}`,
               message: `${creator.name} raised ticket: "${title}"`,
               type: 'Info',
@@ -660,30 +801,26 @@ exports.addTicketMessage = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Message content is required' });
     }
 
-    let ticket = null;
     const lookup = mongoose.Types.ObjectId.isValid(req.params.id)
       ? { _id: req.params.id }
       : { code: req.params.id };
 
-    ticket = await Ticket.findOne(lookup);
+    const ticket = await Ticket.findOne(lookup);
     if (!ticket) {
       return res.status(404).json({ success: false, error: { code: 'not_found', message: 'Ticket not found' } });
     }
 
+    // Role-based privacy validation
+    const hasAccess = await canUserAccessTicket(req.user, ticket, 'message');
+    if (!hasAccess) {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'forbidden', message: 'Access denied: You do not have permission to send messages on this ticket' }
+      });
+    }
+
     const isClient = req.user?.isClient || req.user?.role === 'CLIENT';
     const isStaff = req.user?.isStaff;
-
-    // Strict IDOR Check for messaging
-    if (isClient) {
-      if (!ticket.client_id || String(ticket.client_id) !== String(req.user.clientId)) {
-        return res.status(403).json({
-          success: false,
-          error: { code: 'forbidden', message: 'Access denied: You do not have permission to send messages on this ticket' }
-        });
-      }
-    } else if (!isStaff) {
-      return res.status(401).json({ success: false, error: { code: 'unauthorized', message: 'Authentication required' } });
-    }
 
     const sender = isStaff ? (sender_type === 'CLIENT' ? 'CLIENT' : 'STAFF') : 'CLIENT';
     const isInternalNote = isStaff && !!internal; // Clients can NEVER send internal notes
@@ -696,6 +833,7 @@ exports.addTicketMessage = async (req, res, next) => {
 
     const newMsgDoc = {
       sender,
+      sender_id: req.user?.id && mongoose.Types.ObjectId.isValid(req.user.id) ? req.user.id : undefined,
       author_name: author,
       author_email: email,
       message: message.trim(),
@@ -721,7 +859,8 @@ exports.addTicketMessage = async (req, res, next) => {
 
     const populated = await Ticket.findById(ticket._id)
       .populate('client_id', 'businessName ownerName email phone name company_name')
-      .populate('assignee_id', 'name email designation')
+      .populate('assignee_id', 'name email designation role')
+      .populate('created_by', 'name email designation role')
       .lean();
 
     const ticketObj = {
@@ -729,6 +868,8 @@ exports.addTicketMessage = async (req, res, next) => {
       id: populated._id,
       clientId: populated.client_id?._id || populated.client_id,
       projectId: populated.project_id,
+      createdById: populated.created_by?._id || populated.created_by,
+      assigneeId: populated.assignee_id?._id || populated.assignee_id,
       source: populated.source || 'CRM'
     };
 
@@ -749,18 +890,25 @@ exports.addTicketMessage = async (req, res, next) => {
         req.io.to(`ticket_${ticketObj.code}`).emit('new_ticket_message', messagePayload);
       }
 
-      // 2. Emit to authorized CRM Staff room
-      req.io.to('crm_staff_room').emit('new_ticket_message', messagePayload);
-      req.io.to('company_madhura_tickets').emit('ticket_updated', ticketObj);
+      // 2. Emit to Admin room
+      req.io.to('crm_admin_room').emit('new_ticket_message', messagePayload);
 
-      // 3. Emit to the specific client's room ONLY if not an internal note!
+      // 3. Emit to creator and assignee private rooms
+      if (ticketObj.createdById) {
+        req.io.to(`user_${ticketObj.createdById}`).emit('new_ticket_message', messagePayload);
+      }
+      if (ticketObj.assigneeId) {
+        req.io.to(`user_${ticketObj.assigneeId}`).emit('new_ticket_message', messagePayload);
+      }
+
+      // 4. Emit to the specific client's room ONLY if not an internal note!
       if (ticketObj.clientId && !isInternalNote) {
         const clientRoom = `client_${ticketObj.clientId}`;
         req.io.to(clientRoom).emit('new_ticket_message', messagePayload);
         req.io.to(clientRoom).emit('ticket_updated', ticketObj);
       }
 
-      // 4. Notifications for staff if client replies
+      // 5. Notifications for staff if client replies
       if (sender === 'CLIENT') {
         try {
           const admins = await User.find({ role: { $in: ['Admin', 'Managing Director MD', 'Project Manager', 'Team Lead'] }, isActive: true }).select('_id');
@@ -788,43 +936,82 @@ exports.addTicketMessage = async (req, res, next) => {
   }
 };
 
-exports.updateTicketStatus = async (req, res, next) => {
+exports.getTicketMessages = async (req, res, next) => {
   try {
-    const { status, priority, assignee_id } = req.body;
-    let ticket = null;
     const lookup = mongoose.Types.ObjectId.isValid(req.params.id)
       ? { _id: req.params.id }
       : { code: req.params.id };
 
-    ticket = await Ticket.findOne(lookup);
+    const ticket = await Ticket.findOne(lookup).select('messages client_id created_by assignee_id code status').lean();
     if (!ticket) {
       return res.status(404).json({ success: false, error: { code: 'not_found', message: 'Ticket not found' } });
+    }
+
+    const hasAccess = await canUserAccessTicket(req.user, ticket, 'read');
+    if (!hasAccess) {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'forbidden', message: 'Access denied: You do not have permission to view conversation history for this ticket' }
+      });
+    }
+
+    const isClient = req.user?.isClient || req.user?.role === 'CLIENT';
+    const messages = isClient
+      ? (ticket.messages || []).filter(m => !m.internal)
+      : (ticket.messages || []);
+
+    res.status(200).json({ success: true, count: messages.length, data: messages });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateTicketStatus = async (req, res, next) => {
+  try {
+    const { status, priority, assignee_id } = req.body;
+    const lookup = mongoose.Types.ObjectId.isValid(req.params.id)
+      ? { _id: req.params.id }
+      : { code: req.params.id };
+
+    const ticket = await Ticket.findOne(lookup);
+    if (!ticket) {
+      return res.status(404).json({ success: false, error: { code: 'not_found', message: 'Ticket not found' } });
+    }
+
+    const hasAccess = await canUserAccessTicket(req.user, ticket, 'update');
+    if (!hasAccess) {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'forbidden', message: 'Access denied: You do not have permission to update this ticket' }
+      });
     }
 
     const isClient = req.user?.isClient || req.user?.role === 'CLIENT';
     const isStaff = req.user?.isStaff;
 
     if (isClient) {
-      // IDOR check: Verify client owns ticket
-      if (!ticket.client_id || String(ticket.client_id) !== String(req.user.clientId)) {
-        return res.status(403).json({
-          success: false,
-          error: { code: 'forbidden', message: 'Access denied: You do not own this ticket' }
-        });
-      }
       // Clients can only mark as CLOSED or re-open as OPEN
       if (status && ['CLOSED', 'OPEN'].includes(status.toUpperCase())) {
         ticket.status = status.toUpperCase();
       }
-      // Cannot change priority or assignee
     } else if (isStaff) {
       if (status) ticket.status = status.toUpperCase();
-      if (priority) ticket.priority = priority.toUpperCase();
-      if (assignee_id !== undefined) {
-        ticket.assignee_id = (assignee_id && mongoose.Types.ObjectId.isValid(assignee_id)) ? assignee_id : null;
+      // Only Admin or Manager can alter priority or reassign tickets
+      if (req.user.isAdmin || req.user.isManager) {
+        if (priority) ticket.priority = priority.toUpperCase();
+        if (assignee_id !== undefined) {
+          ticket.assignee_id = (assignee_id && mongoose.Types.ObjectId.isValid(assignee_id)) ? assignee_id : null;
+        }
+      } else {
+        // Regular user can only update status
+        if (status) ticket.status = status.toUpperCase();
+        if (assignee_id !== undefined && String(assignee_id) !== String(ticket.assignee_id)) {
+          return res.status(403).json({
+            success: false,
+            error: { code: 'forbidden', message: 'Only managers and admins can reassign tickets' }
+          });
+        }
       }
-    } else {
-      return res.status(401).json({ success: false, error: { code: 'unauthorized', message: 'Authentication required' } });
     }
 
     ticket.updated_at = new Date();
@@ -832,7 +1019,8 @@ exports.updateTicketStatus = async (req, res, next) => {
 
     const populated = await Ticket.findById(ticket._id)
       .populate('client_id', 'businessName ownerName email phone name company_name')
-      .populate('assignee_id', 'name email designation')
+      .populate('assignee_id', 'name email designation role')
+      .populate('created_by', 'name email designation role')
       .lean();
 
     const ticketObj = {
@@ -840,19 +1028,133 @@ exports.updateTicketStatus = async (req, res, next) => {
       id: populated._id,
       clientId: populated.client_id?._id || populated.client_id,
       projectId: populated.project_id,
+      createdById: populated.created_by?._id || populated.created_by,
+      assigneeId: populated.assignee_id?._id || populated.assignee_id,
     };
 
     if (req.io) {
       req.io.to(`ticket_${ticketObj.id}`).emit('ticket_updated', ticketObj);
       if (ticketObj.code) req.io.to(`ticket_${ticketObj.code}`).emit('ticket_updated', ticketObj);
-      req.io.to('crm_staff_room').emit('ticket_updated', ticketObj);
-      req.io.to('company_madhura_tickets').emit('ticket_updated', ticketObj);
+      req.io.to('crm_admin_room').emit('ticket_updated', ticketObj);
+      if (ticketObj.createdById) {
+        req.io.to(`user_${ticketObj.createdById}`).emit('ticket_updated', ticketObj);
+      }
+      if (ticketObj.assigneeId) {
+        req.io.to(`user_${ticketObj.assigneeId}`).emit('ticket_updated', ticketObj);
+      }
       if (ticketObj.clientId) {
         req.io.to(`client_${ticketObj.clientId}`).emit('ticket_updated', ticketObj);
       }
     }
 
     res.status(200).json({ success: true, data: ticketObj });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteTicket = async (req, res, next) => {
+  try {
+    const lookup = mongoose.Types.ObjectId.isValid(req.params.id)
+      ? { _id: req.params.id }
+      : { code: req.params.id };
+
+    const ticket = await Ticket.findOne(lookup);
+    if (!ticket) {
+      return res.status(404).json({ success: false, error: { code: 'not_found', message: 'Ticket not found' } });
+    }
+
+    const canDelete = await canUserAccessTicket(req.user, ticket, 'delete');
+    if (!canDelete) {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'forbidden', message: 'Access denied: You are not authorized to delete this ticket' }
+      });
+    }
+
+    const ticketId = ticket._id.toString();
+    const ticketCode = ticket.code;
+    const clientId = ticket.client_id?.toString();
+    const createdById = ticket.created_by?.toString();
+    const assigneeId = ticket.assignee_id?.toString();
+
+    await Ticket.deleteOne({ _id: ticket._id });
+
+    if (req.io) {
+      const payload = { ticketId, ticketCode };
+      req.io.to(`ticket_${ticketId}`).emit('ticket_deleted', payload);
+      req.io.to('crm_admin_room').emit('ticket_deleted', payload);
+      if (createdById) req.io.to(`user_${createdById}`).emit('ticket_deleted', payload);
+      if (assigneeId) req.io.to(`user_${assigneeId}`).emit('ticket_deleted', payload);
+      if (clientId) req.io.to(`client_${clientId}`).emit('ticket_deleted', payload);
+    }
+
+    res.status(200).json({ success: true, message: 'Ticket deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.addTicketAttachment = async (req, res, next) => {
+  try {
+    const lookup = mongoose.Types.ObjectId.isValid(req.params.id)
+      ? { _id: req.params.id }
+      : { code: req.params.id };
+
+    const ticket = await Ticket.findOne(lookup);
+    if (!ticket) {
+      return res.status(404).json({ success: false, error: { code: 'not_found', message: 'Ticket not found' } });
+    }
+
+    const hasAccess = await canUserAccessTicket(req.user, ticket, 'message');
+    if (!hasAccess) {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'forbidden', message: 'Access denied: You do not have permission to attach files to this ticket' }
+      });
+    }
+
+    let attachmentObj = null;
+
+    if (req.file) {
+      const uploadResult = await uploadToCloudinary(req.file.buffer, 'ticket_attachments');
+      attachmentObj = {
+        name: req.file.originalname,
+        url: uploadResult.secure_url || uploadResult.url,
+        type: req.file.mimetype,
+        size: req.file.size,
+        uploaded_at: new Date()
+      };
+    } else if (req.body.url && req.body.name) {
+      attachmentObj = {
+        name: req.body.name,
+        url: req.body.url,
+        type: req.body.type || 'application/octet-stream',
+        size: Number(req.body.size || 0),
+        uploaded_at: new Date()
+      };
+    } else {
+      return res.status(400).json({ success: false, message: 'File or attachment url is required' });
+    }
+
+    ticket.attachments = ticket.attachments || [];
+    ticket.attachments.push(attachmentObj);
+    ticket.updated_at = new Date();
+    await ticket.save();
+
+    if (req.io) {
+      const payload = {
+        ticketId: ticket._id.toString(),
+        attachment: attachmentObj,
+      };
+      req.io.to(`ticket_${ticket._id}`).emit('ticket_attachment_added', payload);
+      req.io.to('crm_admin_room').emit('ticket_attachment_added', payload);
+      if (ticket.created_by) req.io.to(`user_${ticket.created_by}`).emit('ticket_attachment_added', payload);
+      if (ticket.assignee_id) req.io.to(`user_${ticket.assignee_id}`).emit('ticket_attachment_added', payload);
+      if (ticket.client_id) req.io.to(`client_${ticket.client_id}`).emit('ticket_attachment_added', payload);
+    }
+
+    res.status(201).json({ success: true, data: attachmentObj });
   } catch (error) {
     next(error);
   }

@@ -32,6 +32,15 @@ const protect = async (req, res, next) => {
         });
       }
 
+      // Attach standardized RBAC role flags
+      const ADMIN_ROLES = ['Super Admin', 'Admin', 'Managing Director MD', 'SUPER_ADMIN', 'COMPANY_ADMIN'];
+      const MANAGER_ROLES = ['Manager', 'Project Manager', 'Team Lead', 'HR', 'SUPPORT_MANAGER'];
+      req.user.isAdmin = ADMIN_ROLES.includes(req.user.role);
+      req.user.isManager = MANAGER_ROLES.includes(req.user.role) || req.user.isAdmin;
+      req.user.isRegularUser = !req.user.isAdmin && !req.user.isManager;
+      req.user.isStaff = true;
+      req.user.isClient = false;
+
       // Multi-session check disabled temporarily for debugging
       // const incomingHash = crypto.createHash('sha256').update(token).digest('hex');
       // if (req.user.activeSessionTokens && !req.user.activeSessionTokens.includes(incomingHash)) {

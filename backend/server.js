@@ -126,18 +126,27 @@ app.use(notFound);
 app.use(errorHandler);
 
 // Socket.io Connection Logic with Strict Role & Client Isolation
-const STAFF_SOCKET_ROLES = [
+const ADMIN_SOCKET_ROLES = [
   'Super Admin',
   'Admin',
+  'Managing Director MD',
+  'SUPER_ADMIN',
+  'COMPANY_ADMIN',
+];
+
+const MANAGER_SOCKET_ROLES = [
   'Manager',
-  'Field Executive',
   'Project Manager',
   'Team Lead',
   'HR',
-  'Managing Director MD',
-  'COMPANY_ADMIN',
-  'SUPER_ADMIN',
   'SUPPORT_MANAGER',
+];
+
+const STAFF_SOCKET_ROLES = [
+  ...ADMIN_SOCKET_ROLES,
+  ...MANAGER_SOCKET_ROLES,
+  'Field Executive',
+  'user',
   'SUPPORT_AGENT',
 ];
 
@@ -162,8 +171,16 @@ io.use(async (socket, next) => {
         STAFF_SOCKET_ROLES.includes(decoded.role) && !decoded.isClient && !decoded.clientId;
 
       if (isStaffRole) {
+        const role = decoded.role || 'Field Executive';
+        const isAdmin = ADMIN_SOCKET_ROLES.includes(role);
+        const isManager = MANAGER_SOCKET_ROLES.includes(role) || isAdmin;
+        const isRegularUser = !isAdmin && !isManager;
+
         socket.userId = decoded.id || decoded._id;
-        socket.role = decoded.role || 'Admin';
+        socket.role = role;
+        socket.isAdmin = isAdmin;
+        socket.isManager = isManager;
+        socket.isRegularUser = isRegularUser;
         socket.isStaff = true;
         socket.isClient = false;
         socket.companyId = decoded.companyId || 'company_madhura';
@@ -172,6 +189,9 @@ io.use(async (socket, next) => {
         socket.userId = decoded.id || decoded._id;
         socket.clientId = resolvedClientId ? String(resolvedClientId) : null;
         socket.role = 'CLIENT';
+        socket.isAdmin = false;
+        socket.isManager = false;
+        socket.isRegularUser = false;
         socket.isClient = true;
         socket.isStaff = false;
         socket.companyId = decoded.companyId || 'company_madhura';
@@ -191,6 +211,9 @@ io.use(async (socket, next) => {
       socket.userId = String(clientIdHeader);
       socket.clientId = String(clientIdHeader);
       socket.role = 'CLIENT';
+      socket.isAdmin = false;
+      socket.isManager = false;
+      socket.isRegularUser = false;
       socket.isClient = true;
       socket.isStaff = false;
       socket.companyId = 'company_madhura';
@@ -198,6 +221,9 @@ io.use(async (socket, next) => {
       socket.userId =
         socket.handshake.auth?.userId || socket.handshake.query?.userId || 'api_service_staff';
       socket.role = 'Admin';
+      socket.isAdmin = true;
+      socket.isManager = true;
+      socket.isRegularUser = false;
       socket.isStaff = true;
       socket.isClient = false;
       socket.companyId = 'company_madhura';
@@ -214,12 +240,16 @@ io.on('connection', (socket) => {
   );
 
   // Scoped user room
+  socket.join(`user_${socket.userId}`);
   socket.join(`${socket.companyId}_${socket.userId}`);
 
-  if (socket.isStaff) {
-    // Staff join staff rooms for alerts & global ticket notifications
+  if (socket.isAdmin) {
+    // Only Admin joins global staff rooms for system alerts & global ticket notifications
+    socket.join('crm_admin_room');
     socket.join('crm_staff_room');
     socket.join(`${socket.companyId}_tickets`);
+  } else if (socket.isManager) {
+    socket.join('crm_manager_room');
   } else if (socket.isClient && socket.clientId) {
     // Clients ONLY join their isolated client room
     socket.join(`client_${socket.clientId}`);
@@ -233,33 +263,23 @@ io.on('connection', (socket) => {
   socket.on('join_ticket', async (ticketId) => {
     if (!ticketId) return;
     try {
-      if (socket.isStaff) {
-        socket.join(`ticket_${ticketId}`);
-        console.log(`[Socket Auth] Staff ${socket.userId} joined room ticket_${ticketId}`);
+      const Ticket = mongoose.model('Ticket');
+      const lookup = mongoose.Types.ObjectId.isValid(ticketId)
+        ? { _id: ticketId }
+        : { code: ticketId };
+
+      const ticket = await Ticket.findOne(lookup).select('client_id assignee_id created_by code status');
+      if (!ticket) {
+        socket.emit('socket_error', { code: 'NOT_FOUND', message: 'Ticket not found' });
         return;
       }
 
+      // 1. Client Check: Verify client owns the ticket
       if (socket.isClient) {
-        if (!socket.clientId) {
-          socket.emit('socket_error', { code: 'UNAUTHORIZED', message: 'Client ID missing in session' });
-          return;
-        }
-
-        const Ticket = mongoose.model('Ticket');
-        const lookup = mongoose.Types.ObjectId.isValid(ticketId)
-          ? { _id: ticketId }
-          : { code: ticketId };
-
-        const ticket = await Ticket.findOne(lookup).select('client_id code');
-        if (!ticket) {
-          socket.emit('socket_error', { code: 'NOT_FOUND', message: 'Ticket not found' });
-          return;
-        }
-
         const ticketClientId = ticket.client_id ? String(ticket.client_id) : null;
         if (!ticketClientId || ticketClientId !== String(socket.clientId)) {
           console.warn(
-            `[Socket Security ALERT] Socket ${socket.id} (client ${socket.clientId}) blocked from unauthorized ticket ${ticketId} (owned by ${ticketClientId})`
+            `[Socket Security ALERT] Client ${socket.clientId} blocked from unauthorized ticket ${ticketId} (owned by ${ticketClientId})`
           );
           socket.emit('socket_error', {
             code: 'UNAUTHORIZED_TICKET_ACCESS',
@@ -270,11 +290,48 @@ io.on('connection', (socket) => {
 
         socket.join(`ticket_${ticket._id}`);
         if (ticket.code) socket.join(`ticket_${ticket.code}`);
-        console.log(`[Socket Auth] Client ${socket.clientId} authorized and joined room ticket_${ticketId}`);
         return;
       }
 
-      socket.emit('socket_error', { code: 'UNAUTHORIZED', message: 'Authentication required' });
+      // 2. CRM Admin Check: Full access
+      if (socket.isAdmin) {
+        socket.join(`ticket_${ticket._id}`);
+        if (ticket.code) socket.join(`ticket_${ticket.code}`);
+        return;
+      }
+
+      // 3. Manager and Regular CRM User: Check ownership & assignment
+      const userIdStr = String(socket.userId);
+      const createdByStr = ticket.created_by ? String(ticket.created_by) : null;
+      const assigneeIdStr = ticket.assignee_id ? String(ticket.assignee_id) : null;
+
+      const isDirectParty = (createdByStr === userIdStr || assigneeIdStr === userIdStr);
+      if (isDirectParty) {
+        socket.join(`ticket_${ticket._id}`);
+        if (ticket.code) socket.join(`ticket_${ticket.code}`);
+        return;
+      }
+
+      // Manager: check if created by or assigned to subordinates
+      if (socket.isManager) {
+        const User = mongoose.model('User');
+        const subordinates = await User.find({ manager: socket.userId, isActive: true }).select('_id');
+        const subIds = subordinates.map(s => String(s._id));
+        if ((createdByStr && subIds.includes(createdByStr)) || (assigneeIdStr && subIds.includes(assigneeIdStr))) {
+          socket.join(`ticket_${ticket._id}`);
+          if (ticket.code) socket.join(`ticket_${ticket.code}`);
+          return;
+        }
+      }
+
+      // Unauthorized regular CRM user blocked
+      console.warn(
+        `[Socket Security ALERT] Staff ${socket.userId} (${socket.role}) blocked from unauthorized ticket ${ticketId}`
+      );
+      socket.emit('socket_error', {
+        code: 'UNAUTHORIZED_TICKET_ACCESS',
+        message: 'Access denied: You do not have permission to subscribe to this ticket',
+      });
     } catch (joinErr) {
       console.error('[Socket join_ticket error]:', joinErr.message);
     }

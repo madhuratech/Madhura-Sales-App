@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const v1AuthMiddleware = require('../../middleware/v1AuthMiddleware');
+const upload = require('../../middleware/uploadMiddleware');
 const {
   getHealth,
   getBundle,
@@ -21,7 +22,10 @@ const {
   getTicketById,
   createTicket,
   addTicketMessage,
+  getTicketMessages,
   updateTicketStatus,
+  deleteTicket,
+  addTicketAttachment,
   getApprovals,
   createApproval,
   decideApproval,
@@ -76,9 +80,14 @@ router.route('/tickets')
 
 router.route('/tickets/:id')
   .get(getTicketById)
-  .patch(updateTicketStatus);
+  .patch(updateTicketStatus)
+  .delete(deleteTicket);
 
-router.post('/tickets/:id/messages', addTicketMessage);
+router.route('/tickets/:id/messages')
+  .get(getTicketMessages)
+  .post(addTicketMessage);
+
+router.post('/tickets/:id/attachments', upload.single('file'), addTicketAttachment);
 
 // 8. Approvals Endpoints
 router.route('/approvals')

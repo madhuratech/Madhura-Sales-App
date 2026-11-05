@@ -57,7 +57,6 @@ export default function SupportScreenWeb() {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [sourceFilter, setSourceFilter] = useState('CRM');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [priorityFilter, setPriorityFilter] = useState('ALL');
   const [clientFilter, setClientFilter] = useState('ALL');
@@ -121,7 +120,7 @@ export default function SupportScreenWeb() {
   const fetchTickets = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get('/v1/tickets');
+      const res = await api.get('/v1/tickets?source=CRM');
       const data = res.data?.data || [];
       setTickets(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -288,9 +287,10 @@ export default function SupportScreenWeb() {
         }
       };
 
-      // 3. New Ticket Created
+      // 3. New Ticket Created (CRM Only)
       const handleTicketCreated = (newTicket) => {
         if (!newTicket || !isMounted) return;
+        if (newTicket.source && newTicket.source !== 'CRM') return;
         setTickets((prev) => {
           const exists = prev.some(
             (t) => String(t._id || t.id) === String(newTicket._id || newTicket.id) || t.code === newTicket.code
@@ -539,11 +539,9 @@ export default function SupportScreenWeb() {
     );
   };
 
-  const crmTickets = tickets.filter(isStaffCreator);
-  const portalTickets = tickets.filter((t) => !isStaffCreator(t));
-  const baseTickets = sourceFilter === 'CRM' ? crmTickets : sourceFilter === 'PORTAL' ? portalTickets : tickets;
+  const baseTickets = tickets.filter(isStaffCreator);
 
-  // Metrics based on active source scope
+  // Metrics based on active CRM tickets
   const totalCount = baseTickets.length;
   const openCount = baseTickets.filter((t) => (t.status || 'OPEN').toUpperCase() === 'OPEN').length;
   const inProgressCount = baseTickets.filter((t) => (t.status || '').toUpperCase() === 'IN_PROGRESS').length;
@@ -678,64 +676,6 @@ export default function SupportScreenWeb() {
           </div>
         </div>
 
-        {/* Source Selector Bar: CRM Tickets vs Client Portal */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm">
-          <div className="flex items-center gap-1.5 p-1 bg-slate-100/90 rounded-xl">
-            <button
-              onClick={() => setSourceFilter('CRM')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
-                sourceFilter === 'CRM'
-                  ? 'bg-[#1B2B4B] text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-              }`}
-            >
-              <ShieldCheck size={14} className={sourceFilter === 'CRM' ? 'text-[#F5A623]' : ''} />
-              <span>CRM Tickets</span>
-              <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-                  sourceFilter === 'CRM' ? 'bg-[#F5A623] text-[#1B2B4B]' : 'bg-slate-200 text-slate-700'
-                }`}
-              >
-                {crmTickets.length}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setSourceFilter('PORTAL')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
-                sourceFilter === 'PORTAL'
-                  ? 'bg-[#1B2B4B] text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-              }`}
-            >
-              <Globe size={14} className={sourceFilter === 'PORTAL' ? 'text-[#F5A623]' : ''} />
-              <span>Client Portal</span>
-              <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-                  sourceFilter === 'PORTAL' ? 'bg-[#F5A623] text-[#1B2B4B]' : 'bg-slate-200 text-slate-700'
-                }`}
-              >
-                {portalTickets.length}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setSourceFilter('ALL')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
-                sourceFilter === 'ALL'
-                  ? 'bg-[#1B2B4B] text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-              }`}
-            >
-              <span>All ({tickets.length})</span>
-            </button>
-          </div>
-
-          <div className="text-xs text-slate-500 font-medium px-2">
-            Showing <strong className="text-slate-900 font-bold">{filteredTickets.length}</strong> {sourceFilter === 'CRM' ? 'internal CRM' : sourceFilter === 'PORTAL' ? 'client portal' : 'total'} tickets
-          </div>
-        </div>
-
         {/* Filters & Search */}
         <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-md">
@@ -808,13 +748,11 @@ export default function SupportScreenWeb() {
               <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-500 mx-auto flex items-center justify-center mb-4">
                 <MessageSquare size={30} />
               </div>
-              <h3 className="text-base font-bold text-slate-800">No {sourceFilter === 'CRM' ? 'CRM' : sourceFilter === 'PORTAL' ? 'Client Portal' : ''} tickets found</h3>
+              <h3 className="text-base font-bold text-slate-800">No CRM tickets found</h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-5">
                 {search || statusFilter !== 'ALL'
                   ? 'No tickets match the selected filters. Try resetting the filter.'
-                  : sourceFilter === 'CRM'
-                  ? 'No CRM tickets raised yet. Click "Raise Ticket" to submit an issue or inquiry.'
-                  : 'No tickets in this category.'}
+                  : 'No CRM tickets raised yet. Click "Raise Ticket" to submit an issue or inquiry.'}
               </p>
               <button
                 onClick={() => setRaiseModalOpen(true)}
@@ -832,7 +770,7 @@ export default function SupportScreenWeb() {
                     <th className="px-6 py-4">Code</th>
                     <th className="px-6 py-4">Subject & Details</th>
                     <th className="px-6 py-4">Client</th>
-                    <th className="px-6 py-4">Source</th>
+                    <th className="px-6 py-4">Raised By</th>
                     <th className="px-6 py-4">Priority</th>
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4">Messages</th>
@@ -845,7 +783,7 @@ export default function SupportScreenWeb() {
                     const pr = PRIORITY_CONFIG[(ticket.priority || 'MEDIUM').toUpperCase()] || PRIORITY_CONFIG.MEDIUM;
                     const msgCount = (ticket.messages || []).length;
                     const clientName = getClientName(ticket);
-                    const isCrm = isStaffCreator(ticket);
+                    const creatorName = ticket.creator?.name || ticket.created_by?.name || 'CRM Staff';
 
                     return (
                       <tr
@@ -870,17 +808,10 @@ export default function SupportScreenWeb() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          {isCrm ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                              <ShieldCheck size={12} className="text-purple-600" />
-                              CRM
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                              <Globe size={12} className="text-blue-500" />
-                              Portal
-                            </span>
-                          )}
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
+                            <User size={13} className="text-slate-400" />
+                            <span>{creatorName}</span>
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <span

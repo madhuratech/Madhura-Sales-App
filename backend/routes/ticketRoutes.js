@@ -1,12 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 const {
   getTickets,
   getTicketById,
   createTicket,
   addTicketMessage,
-  updateTicketStatus
+  getTicketMessages,
+  updateTicketStatus,
+  deleteTicket,
+  addTicketAttachment
 } = require('../controllers/v1/universalShareController');
 
 router.use(protect);
@@ -17,9 +21,14 @@ router.route('/')
 
 router.route('/:id')
   .get(getTicketById)
-  .patch(updateTicketStatus);
+  .patch(updateTicketStatus)
+  .delete(deleteTicket);
 
-router.post('/:id/messages', addTicketMessage);
+router.route('/:id/messages')
+  .get(getTicketMessages)
+  .post(addTicketMessage);
+
+router.post('/:id/attachments', upload.single('file'), addTicketAttachment);
 
 module.exports = router;
 
