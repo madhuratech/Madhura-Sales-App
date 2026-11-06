@@ -31,6 +31,9 @@ import {
   WifiOff,
   Lock,
   Loader2,
+  Paperclip,
+  FileText,
+  Download,
 } from 'lucide-react';
 
 const NAVY = '#1B2B4B';
@@ -50,9 +53,36 @@ const PRIORITY_CONFIG = {
   URGENT: { label: 'Urgent', color: '#ef4444', bg: '#fee2e2' },
 };
 
+const ADMIN_ROLES = [
+  'Super Admin',
+  'Admin',
+  'Managing Director MD',
+  'SUPER_ADMIN',
+  'COMPANY_ADMIN',
+];
+
+const getStoredUser = () => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const raw = localStorage.getItem('user');
+      if (raw) return JSON.parse(raw);
+    } catch (_) {}
+  }
+  return null;
+};
+
+const resolveAttachmentUrl = (url) => {
+  if (!url) return '#';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  const base = (api.defaults.baseURL || 'http://localhost:5005/api').replace(/\/api\/?$/, '');
+  return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 export default function SupportScreenWeb() {
   const router = useRouter();
-  const [role, setRole] = useState('Field Executive');
+  const cachedUser = useRef(getStoredUser()).current;
+  const [role, setRole] = useState(() => cachedUser?.role || 'Field Executive');
+  const [currentUser, setCurrentUser] = useState(() => cachedUser);
   const [tickets, setTickets] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -66,7 +96,13 @@ export default function SupportScreenWeb() {
   const [replyText, setReplyText] = useState('');
   const [isInternal, setIsInternal] = useState(false);
   const [sendingReply, setSendingReply] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [attachedFiles, setAttachedFiles] = useState([]);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+  const fileInputRef = useRef(null);
+  const isAdmin =
+    ADMIN_ROLES.includes(role) ||
+    Boolean(currentUser?.isAdmin) ||
+    (typeof role === 'string' && role.toLowerCase().includes('admin'));
 
   // Real-time socket states & refs
   const [isSocketConnected, setIsSocketConnected] = useState(false);
@@ -134,18 +170,35 @@ export default function SupportScreenWeb() {
   // ── Ticket Room Subscription (join/leave active ticket) ───────────────────
   useEffect(() => {
     if (!activeTicket) return;
-    const tid = activeTicket._id || activeTicket.id;
+    const tid = String(activeTicket._id || activeTicket.id || '');
     const code = activeTicket.code;
-    const sock = getSocket();
-    if (sock && sock.connected) {
-      sock.emit('join_ticket', tid);
-      if (code) sock.emit('join_ticket', code);
-    }
+
+    let subSock = null;
+    let isCancelled = false;
+
+    const doJoin = async () => {
+      subSock = await connectSocket();
+      if (!subSock || isCancelled) return;
+
+      const emitRooms = () => {
+        if (tid) subSock.emit('join_ticket', tid);
+        if (code) subSock.emit('join_ticket', code);
+      };
+
+      if (subSock.connected) {
+        emitRooms();
+      } else {
+        subSock.once('connect', emitRooms);
+      }
+    };
+
+    doJoin();
 
     return () => {
-      if (sock && sock.connected) {
-        sock.emit('leave_ticket', tid);
-        if (code) sock.emit('leave_ticket', code);
+      isCancelled = true;
+      if (subSock && subSock.connected) {
+        if (tid) subSock.emit('leave_ticket', tid);
+        if (code) subSock.emit('leave_ticket', code);
       }
     };
   }, [activeTicket?._id, activeTicket?.id, activeTicket?.code]);
@@ -161,13 +214,21 @@ export default function SupportScreenWeb() {
 
       setIsSocketConnected(activeSock.connected);
 
+      // Join active ticket immediately if already connected
+      if (activeSock.connected && activeTicketRef.current) {
+        const tid = String(activeTicketRef.current._id || activeTicketRef.current.id || '');
+        const code = activeTicketRef.current.code;
+        if (tid) activeSock.emit('join_ticket', tid);
+        if (code) activeSock.emit('join_ticket', code);
+      }
+
       const onConnect = () => {
         if (!isMounted) return;
         setIsSocketConnected(true);
         if (activeTicketRef.current) {
-          const tid = activeTicketRef.current._id || activeTicketRef.current.id;
+          const tid = String(activeTicketRef.current._id || activeTicketRef.current.id || '');
           const code = activeTicketRef.current.code;
-          activeSock.emit('join_ticket', tid);
+          if (tid) activeSock.emit('join_ticket', tid);
           if (code) activeSock.emit('join_ticket', code);
         }
       };
@@ -368,13 +429,71 @@ export default function SupportScreenWeb() {
     }
   };
 
-  // ── Post Reply (Optimistic Rendering + Sending/Sent/Failed States) ────────
+  // ── Document Selection & Removal ──────────────────────────────────────────
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const validFiles = files.filter((f) => {
+      if (f.size > 15 * 1024 * 1024) {
+        Toast.show({ type: 'error', text1: 'File Too Large', text2: `${f.name} exceeds 15MB limit.` });
+        return false;
+      }
+      return true;
+    });
+
+    const mapped = validFiles.map((f) => ({
+      file: f,
+      name: f.name,
+      size: f.size,
+      type: f.type,
+    }));
+
+    setAttachedFiles((prev) => [...prev, ...mapped]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeAttachment = (index) => {
+    setAttachedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // ── Post Reply (Optimistic Rendering + Sending/Sent/Failed States + Document Upload) ────────
   const handlePostReply = async (retryMsg = null) => {
     const textToSend = (retryMsg ? retryMsg.message : replyText).trim();
-    if (!textToSend || !activeTicket) return;
+    const filesToUpload = retryMsg?.attachedFiles || attachedFiles;
+
+    if (!textToSend && filesToUpload.length === 0) return;
+    if (!activeTicket) return;
 
     const clientMsgId =
       retryMsg?.clientMessageId || `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    setSendingReply(true);
+
+    let uploadedAttachments = retryMsg?.attachments || [];
+    if (filesToUpload.length > 0 && uploadedAttachments.length === 0) {
+      setUploadingAttachment(true);
+      try {
+        for (const item of filesToUpload) {
+          const formData = new FormData();
+          formData.append('file', item.file);
+          const uploadRes = await api.post(`/v1/tickets/${activeTicket._id || activeTicket.id}/attachments`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+          if (uploadRes.data?.data) {
+            uploadedAttachments.push(uploadRes.data.data);
+          }
+        }
+      } catch (uploadErr) {
+        console.error('Failed to upload document:', uploadErr);
+        Toast.show({ type: 'error', text1: 'Upload Error', text2: 'Failed to upload document. Please retry.' });
+        setUploadingAttachment(false);
+        setSendingReply(false);
+        return;
+      } finally {
+        setUploadingAttachment(false);
+      }
+    }
 
     const optimisticMsg = {
       _id: clientMsgId,
@@ -382,8 +501,10 @@ export default function SupportScreenWeb() {
       sender: 'STAFF',
       author_name: currentUser?.name || 'Support Staff',
       author_email: currentUser?.email || '',
-      message: textToSend,
+      message: textToSend || (uploadedAttachments.length === 1 ? `Attached document: ${uploadedAttachments[0].name}` : `Attached ${uploadedAttachments.length} documents`),
       internal: retryMsg ? retryMsg.internal : isInternal,
+      attachments: uploadedAttachments,
+      attachedFiles: filesToUpload,
       created_at: new Date().toISOString(),
       status: 'sending', // 'sending' | 'sent' | 'failed'
     };
@@ -406,47 +527,31 @@ export default function SupportScreenWeb() {
 
     if (!retryMsg) {
       setReplyText('');
+      setAttachedFiles([]);
     }
     setTimeout(() => scrollToBottom('smooth'), 30);
-    setSendingReply(true);
 
     try {
       const res = await api.post(`/v1/tickets/${activeTicket._id || activeTicket.id}/messages`, {
-        message: textToSend,
+        message: textToSend || (uploadedAttachments.length === 1 ? `Attached document: ${uploadedAttachments[0].name}` : `Attached ${uploadedAttachments.length} documents`),
         sender_type: 'STAFF',
         author_name: currentUser?.name || 'Support Staff',
         author_email: currentUser?.email || '',
         internal: retryMsg ? retryMsg.internal : isInternal,
         clientMessageId: clientMsgId,
+        attachments: uploadedAttachments,
       });
 
       const updated = res.data?.data || res.data;
-      const serverMsg = res.data?.messageData;
 
       if (updated) {
-        setActiveTicket((prev) => {
-          if (!prev) return prev;
-          const msgs = (prev.messages || []).map((m) => {
-            if (m.clientMessageId === clientMsgId) {
-              return {
-                ...(serverMsg || m),
-                status: 'sent',
-                _id: serverMsg?._id || m._id,
-              };
-            }
-            return m;
-          });
-          return {
-            ...prev,
-            ...updated,
-            messages: msgs,
-          };
-        });
+        setActiveTicket(updated);
 
         setTickets((prev) =>
           prev.map((t) => ((t._id || t.id) === (updated._id || updated.id) ? updated : t))
         );
       }
+      setTimeout(() => scrollToBottom('smooth'), 50);
     } catch (err) {
       console.warn('Failed to send reply:', err);
       setActiveTicket((prev) => {
@@ -458,15 +563,20 @@ export default function SupportScreenWeb() {
       });
       Toast.show({
         type: 'error',
-        text1: 'Reply Not Delivered',
-        text2: 'Network issue. Click Retry to re-send.',
+        text1: 'Reply Failed',
+        text2: 'Could not deliver response. Click Retry to re-send.',
       });
     } finally {
       setSendingReply(false);
+      setUploadingAttachment(false);
     }
   };
 
   const handleStatusChange = async (newStatus) => {
+    if (!isAdmin) {
+      Toast.show({ type: 'error', text1: 'Permission Denied', text2: 'Only administrators can update ticket status.' });
+      return;
+    }
     if (!activeTicket) return;
     try {
       const res = await api.patch(`/v1/tickets/${activeTicket._id || activeTicket.id}`, {
@@ -481,11 +591,15 @@ export default function SupportScreenWeb() {
       }
       Toast.show({ type: 'success', text1: 'Status Updated', text2: `Status changed to ${newStatus}` });
     } catch (err) {
-      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to update ticket status' });
+      Toast.show({ type: 'error', text1: 'Error', text2: err.response?.data?.error?.message || 'Failed to update ticket status' });
     }
   };
 
   const handlePriorityChange = async (newPriority) => {
+    if (!isAdmin) {
+      Toast.show({ type: 'error', text1: 'Permission Denied', text2: 'Only administrators can update ticket priority.' });
+      return;
+    }
     if (!activeTicket) return;
     try {
       const res = await api.patch(`/v1/tickets/${activeTicket._id || activeTicket.id}`, {
@@ -500,11 +614,15 @@ export default function SupportScreenWeb() {
       }
       Toast.show({ type: 'success', text1: 'Priority Updated', text2: `Priority set to ${newPriority}` });
     } catch (err) {
-      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to update priority' });
+      Toast.show({ type: 'error', text1: 'Error', text2: err.response?.data?.error?.message || 'Failed to update priority' });
     }
   };
 
   const handleAssigneeChange = async (newAssigneeId) => {
+    if (!isAdmin) {
+      Toast.show({ type: 'error', text1: 'Permission Denied', text2: 'Only administrators can reassign tickets.' });
+      return;
+    }
     if (!activeTicket) return;
     try {
       const res = await api.patch(`/v1/tickets/${activeTicket._id || activeTicket.id}`, {
@@ -519,7 +637,7 @@ export default function SupportScreenWeb() {
       }
       Toast.show({ type: 'success', text1: 'Assignee Updated', text2: 'Ticket assignment updated' });
     } catch (err) {
-      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to update ticket assignee' });
+      Toast.show({ type: 'error', text1: 'Error', text2: err.response?.data?.error?.message || 'Failed to update ticket assignee' });
     }
   };
 
@@ -879,6 +997,24 @@ export default function SupportScreenWeb() {
                     <span className="text-xs font-bold text-amber-600 uppercase tracking-wide">
                       {activeTicket.category || 'GENERAL'}
                     </span>
+                    <span
+                      className="font-bold px-2 py-0.5 rounded-full text-[11px]"
+                      style={{
+                        backgroundColor: (STATUS_CONFIG[(activeTicket.status || 'OPEN').toUpperCase()] || STATUS_CONFIG.OPEN).bg,
+                        color: (STATUS_CONFIG[(activeTicket.status || 'OPEN').toUpperCase()] || STATUS_CONFIG.OPEN).color,
+                      }}
+                    >
+                      {(STATUS_CONFIG[(activeTicket.status || 'OPEN').toUpperCase()] || STATUS_CONFIG.OPEN).label}
+                    </span>
+                    <span
+                      className="font-bold px-2 py-0.5 rounded-full text-[11px]"
+                      style={{
+                        backgroundColor: (PRIORITY_CONFIG[(activeTicket.priority || 'MEDIUM').toUpperCase()] || PRIORITY_CONFIG.MEDIUM).bg,
+                        color: (PRIORITY_CONFIG[(activeTicket.priority || 'MEDIUM').toUpperCase()] || PRIORITY_CONFIG.MEDIUM).color,
+                      }}
+                    >
+                      {(activeTicket.priority || 'MEDIUM').toUpperCase()}
+                    </span>
                     <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                       <span className={`w-1.5 h-1.5 rounded-full ${isSocketConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
                       <span>{isSocketConnected ? 'Live Real-Time' : 'Syncing...'}</span>
@@ -901,52 +1037,59 @@ export default function SupportScreenWeb() {
                 </button>
               </div>
 
-              {/* Status & Priority Controls Bar */}
-              <div className="p-4 bg-white border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-slate-500 uppercase">Status:</span>
-                  <select
-                    value={(activeTicket.status || 'OPEN').toUpperCase()}
-                    onChange={(e) => handleStatusChange(e.target.value)}
-                    className="font-bold border border-slate-300 rounded-lg px-2.5 py-1 text-xs outline-none bg-white cursor-pointer"
-                  >
-                    <option value="OPEN">Open</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="RESOLVED">Resolved</option>
-                    <option value="CLOSED">Closed</option>
-                  </select>
-                </div>
+              {/* Status, Priority & Assignee Controls Bar (Only Visible to Admin) */}
+              {isAdmin && (
+                <div className="p-4 bg-white border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-slate-500 uppercase">Status:</span>
+                    <select
+                      value={(activeTicket.status || 'OPEN').toUpperCase()}
+                      onChange={(e) => handleStatusChange(e.target.value)}
+                      className="font-bold border border-slate-300 rounded-lg px-2.5 py-1 text-xs outline-none bg-white cursor-pointer hover:border-slate-400 transition"
+                    >
+                      <option value="OPEN">Open</option>
+                      <option value="IN_PROGRESS">In Progress</option>
+                      <option value="RESOLVED">Resolved</option>
+                      <option value="CLOSED">Closed</option>
+                    </select>
+                  </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-slate-500 uppercase">Priority:</span>
-                  <select
-                    value={(activeTicket.priority || 'MEDIUM').toUpperCase()}
-                    onChange={(e) => handlePriorityChange(e.target.value)}
-                    className="font-bold border border-slate-300 rounded-lg px-2.5 py-1 text-xs outline-none bg-white cursor-pointer"
-                  >
-                    <option value="LOW">Low</option>
-                    <option value="MEDIUM">Medium</option>
-                    <option value="HIGH">High</option>
-                    <option value="URGENT">Urgent</option>
-                  </select>
-                </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-slate-500 uppercase">Priority:</span>
+                    <select
+                      value={(activeTicket.priority || 'MEDIUM').toUpperCase()}
+                      onChange={(e) => handlePriorityChange(e.target.value)}
+                      className="font-bold border border-slate-300 rounded-lg px-2.5 py-1 text-xs outline-none bg-white cursor-pointer hover:border-slate-400 transition"
+                    >
+                      <option value="LOW">Low</option>
+                      <option value="MEDIUM">Medium</option>
+                      <option value="HIGH">High</option>
+                      <option value="URGENT">Urgent</option>
+                    </select>
+                  </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-slate-500 uppercase">Assignee:</span>
-                  <select
-                    value={activeTicket.assignee_id?._id || activeTicket.assignee_id || ''}
-                    onChange={(e) => handleAssigneeChange(e.target.value)}
-                    className="font-bold border border-slate-300 rounded-lg px-2.5 py-1 text-xs outline-none bg-white cursor-pointer max-w-[150px] truncate"
-                  >
-                    <option value="">Unassigned</option>
-                    {staffUsers.map((u) => (
-                      <option key={u._id || u.id} value={u._id || u.id}>
-                        {u.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-slate-500 uppercase">Assignee:</span>
+                    <select
+                      value={activeTicket.assignee_id?._id || activeTicket.assignee_id || ''}
+                      onChange={(e) => handleAssigneeChange(e.target.value)}
+                      className="font-bold border border-slate-300 rounded-lg px-2.5 py-1 text-xs outline-none bg-white cursor-pointer max-w-[150px] truncate hover:border-slate-400 transition"
+                    >
+                      <option value="">Unassigned</option>
+                      {staffUsers.map((u) => (
+                        <option key={u._id || u.id} value={u._id || u.id}>
+                          {u.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                    <ShieldCheck size={12} className="text-emerald-600" />
+                    <span>Admin Controls</span>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Scrollable Conversation Content */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -954,6 +1097,30 @@ export default function SupportScreenWeb() {
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Issue Description</p>
                   <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">{activeTicket.description}</p>
+                  {activeTicket.attachments && activeTicket.attachments.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-slate-200">
+                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-2">
+                        Attached Documents ({activeTicket.attachments.length})
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {activeTicket.attachments.map((att, attIdx) => (
+                          <a
+                            key={att._id || attIdx}
+                            href={resolveAttachmentUrl(att.url)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 hover:text-blue-600 hover:border-blue-300 shadow-2xs transition group"
+                          >
+                            <FileText size={14} className="text-blue-600 shrink-0" />
+                            <span className="font-medium truncate max-w-[200px]" title={att.name}>
+                              {att.name || 'Document'}
+                            </span>
+                            <Download size={13} className="text-slate-400 group-hover:text-blue-600 ml-1 shrink-0" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Messages / Conversation Thread */}
@@ -1036,7 +1203,41 @@ export default function SupportScreenWeb() {
                                 )}
                               </div>
                             </div>
-                            <p className="text-slate-700 text-xs leading-relaxed whitespace-pre-wrap">{msg.message}</p>
+                            {msg.message && (
+                              <p className="text-slate-700 text-xs leading-relaxed whitespace-pre-wrap">{msg.message}</p>
+                            )}
+
+                            {/* Render Attached Documents in Message Bubble */}
+                            {msg.attachments && msg.attachments.length > 0 && (
+                              <div className="mt-2.5 space-y-1.5">
+                                {msg.attachments.map((att, attIdx) => (
+                                  <a
+                                    key={att._id || attIdx}
+                                    href={resolveAttachmentUrl(att.url)}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="flex items-center justify-between gap-3 p-2.5 bg-white/90 hover:bg-white border border-slate-200/90 rounded-lg text-xs transition group shadow-2xs max-w-sm"
+                                  >
+                                    <div className="flex items-center gap-2 truncate">
+                                      <FileText size={15} className="text-blue-600 shrink-0" />
+                                      <div className="truncate text-left">
+                                        <p className="font-semibold text-slate-800 truncate group-hover:text-blue-600">
+                                          {att.name || 'Document'}
+                                        </p>
+                                        {att.size ? (
+                                          <p className="text-[10px] text-slate-400">
+                                            {(att.size / 1024).toFixed(1)} KB
+                                          </p>
+                                        ) : null}
+                                      </div>
+                                    </div>
+                                    <span className="p-1 rounded bg-slate-100 group-hover:bg-blue-50 text-slate-500 group-hover:text-blue-600 transition shrink-0">
+                                      <Download size={13} />
+                                    </span>
+                                  </a>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         );
                       })}
@@ -1072,10 +1273,66 @@ export default function SupportScreenWeb() {
                     Cmd+Enter or Ctrl+Enter to send
                   </span>
                 </div>
+
+                {/* Hidden File Input for document upload */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg,.zip,.rar"
+                  onChange={handleFileSelect}
+                  style={{ display: 'none' }}
+                />
+
+                {/* Selected Documents Preview Strip */}
+                {attachedFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2 p-2 bg-slate-100/90 rounded-xl border border-slate-200">
+                    {attachedFiles.map((f, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 shadow-2xs"
+                      >
+                        <FileText size={14} className="text-blue-600 shrink-0" />
+                        <span className="font-medium truncate max-w-[150px]" title={f.name}>
+                          {f.name}
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          ({f.size ? (f.size / 1024).toFixed(0) : '0'} KB)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeAttachment(idx)}
+                          className="text-slate-400 hover:text-red-500 ml-1 p-0.5 rounded cursor-pointer transition"
+                          title="Remove document"
+                        >
+                          <X size={13} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="flex items-end gap-2">
+                  {/* Document Upload Button */}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={sendingReply || uploadingAttachment}
+                    title="Upload / Attach Document (PDF, Word, Excel, Images up to 15MB)"
+                    className="p-3 rounded-xl border border-slate-300 hover:border-slate-400 bg-white hover:bg-slate-100 text-slate-600 hover:text-[#1B2B4B] transition flex items-center justify-center cursor-pointer shadow-xs disabled:opacity-50"
+                  >
+                    <Paperclip size={16} />
+                  </button>
+
                   <textarea
                     rows={3}
-                    placeholder={isInternal ? 'Type private note for internal CRM team...' : 'Type response for client...'}
+                    placeholder={
+                      isInternal
+                        ? 'Type private note for internal CRM team...'
+                        : attachedFiles.length > 0
+                        ? 'Add an optional note with your document(s)...'
+                        : 'Type response for client...'
+                    }
                     value={replyText}
                     onChange={(e) => handleTypingChange(e.target.value)}
                     onKeyDown={(e) => {
@@ -1086,17 +1343,32 @@ export default function SupportScreenWeb() {
                     }}
                     className="flex-1 p-3 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:border-[#1B2B4B] focus:ring-1 focus:ring-[#1B2B4B] text-slate-900 resize-none shadow-xs"
                   />
+
                   <button
                     onClick={() => handlePostReply()}
-                    disabled={sendingReply || !replyText.trim()}
+                    disabled={
+                      sendingReply ||
+                      uploadingAttachment ||
+                      (!replyText.trim() && attachedFiles.length === 0)
+                    }
                     className="px-4 py-3 rounded-xl bg-[#1B2B4B] hover:bg-[#243454] disabled:bg-slate-300 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
                   >
-                    {sendingReply ? (
-                      <Loader2 size={14} className="animate-spin text-[#F5A623]" />
+                    {uploadingAttachment ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin text-[#F5A623]" />
+                        <span>Uploading...</span>
+                      </>
+                    ) : sendingReply ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin text-[#F5A623]" />
+                        <span>Sending...</span>
+                      </>
                     ) : (
-                      <Send size={14} />
+                      <>
+                        <Send size={14} />
+                        <span>Send</span>
+                      </>
                     )}
-                    <span>{sendingReply ? 'Sending' : 'Send'}</span>
                   </button>
                 </div>
               </div>

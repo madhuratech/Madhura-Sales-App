@@ -68,6 +68,9 @@ const universalShareRoutes = require('./routes/v1/universalShareRoutes');
 const internalTenantRoutes = require('./routes/internalTenantRoutes');
 const { tenantMiddleware } = require('./middleware/tenantMiddleware');
 
+// Serve local uploaded files statically (fallback/direct uploads)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Mount Universal Two-Way Microservices Gateway (accessible via both /v1 and /api/v1)
 app.use('/v1', universalShareRoutes);
 app.use('/api/v1', universalShareRoutes);
@@ -262,6 +265,7 @@ io.on('connection', (socket) => {
   // Ticket conversation room subscription with strict authorization validation
   socket.on('join_ticket', async (ticketId) => {
     if (!ticketId) return;
+    console.log('[Socket join_ticket called]', { socketId: socket.id, userId: socket.userId, role: socket.role, isAdmin: socket.isAdmin, ticketId });
     try {
       const Ticket = mongoose.model('Ticket');
       const lookup = mongoose.Types.ObjectId.isValid(ticketId)
@@ -270,9 +274,11 @@ io.on('connection', (socket) => {
 
       const ticket = await Ticket.findOne(lookup).select('client_id assignee_id created_by code status');
       if (!ticket) {
+        console.log('[Socket join_ticket] Ticket not found for lookup:', lookup);
         socket.emit('socket_error', { code: 'NOT_FOUND', message: 'Ticket not found' });
         return;
       }
+      console.log('[Socket join_ticket found ticket]', { code: ticket.code, id: ticket._id.toString(), created_by: ticket.created_by?.toString(), assignee_id: ticket.assignee_id?.toString() });
 
       // 1. Client Check: Verify client owns the ticket
       if (socket.isClient) {
@@ -295,33 +301,18 @@ io.on('connection', (socket) => {
 
       // 2. CRM Admin Check: Full access
       if (socket.isAdmin) {
+        console.log('[Socket join_ticket] Admin joined rooms:', `ticket_${ticket._id}`, `ticket_${ticket.code}`);
         socket.join(`ticket_${ticket._id}`);
         if (ticket.code) socket.join(`ticket_${ticket.code}`);
         return;
       }
 
-      // 3. Manager and Regular CRM User: Check ownership & assignment
-      const userIdStr = String(socket.userId);
-      const createdByStr = ticket.created_by ? String(ticket.created_by) : null;
-      const assigneeIdStr = ticket.assignee_id ? String(ticket.assignee_id) : null;
-
-      const isDirectParty = (createdByStr === userIdStr || assigneeIdStr === userIdStr);
-      if (isDirectParty) {
+      // 3. Authenticated CRM Staff: Subscribe to real-time conversation while viewing ticket
+      if (socket.isStaff) {
+        console.log('[Socket join_ticket] Staff joined rooms:', `ticket_${ticket._id}`, `ticket_${ticket.code}`);
         socket.join(`ticket_${ticket._id}`);
         if (ticket.code) socket.join(`ticket_${ticket.code}`);
         return;
-      }
-
-      // Manager: check if created by or assigned to subordinates
-      if (socket.isManager) {
-        const User = mongoose.model('User');
-        const subordinates = await User.find({ manager: socket.userId, isActive: true }).select('_id');
-        const subIds = subordinates.map(s => String(s._id));
-        if ((createdByStr && subIds.includes(createdByStr)) || (assigneeIdStr && subIds.includes(assigneeIdStr))) {
-          socket.join(`ticket_${ticket._id}`);
-          if (ticket.code) socket.join(`ticket_${ticket.code}`);
-          return;
-        }
       }
 
       // Unauthorized regular CRM user blocked

@@ -9,6 +9,47 @@ const Approval = require('../../models/Approval');
 const User = require('../../models/User');
 const Notification = require('../../models/Notification');
 const { uploadToCloudinary } = require('../../utils/helpers');
+const fs = require('fs');
+const path = require('path');
+
+async function processAttachmentUpload(file, req) {
+  // If Cloudinary is configured with real credentials, try Cloudinary
+  if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_CLOUD_NAME !== 'dummy_cloud') {
+    try {
+      const uploadResult = await uploadToCloudinary(file.buffer, 'ticket_attachments');
+      return {
+        name: file.originalname,
+        url: uploadResult.secure_url || uploadResult.url,
+        type: file.mimetype,
+        size: file.size,
+        uploaded_at: new Date()
+      };
+    } catch (cErr) {
+      console.warn('Cloudinary upload error, using local storage fallback:', cErr.message);
+    }
+  }
+
+  // Local storage fallback
+  const uploadDir = path.join(__dirname, '../../uploads/ticket_attachments');
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  const safeName = `${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+  const filePath = path.join(uploadDir, safeName);
+  fs.writeFileSync(filePath, file.buffer);
+
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const fileUrl = `${baseUrl}/uploads/ticket_attachments/${safeName}`;
+
+  return {
+    name: file.originalname,
+    url: fileUrl,
+    type: file.mimetype,
+    size: file.size,
+    uploaded_at: new Date()
+  };
+}
 
 // --- 1. Health Check ---
 exports.getHealth = async (req, res) => {
@@ -796,9 +837,11 @@ exports.createTicket = async (req, res, next) => {
 
 exports.addTicketMessage = async (req, res, next) => {
   try {
-    const { message, author_name, author_email, sender_type, internal, clientMessageId } = req.body;
-    if (!message || !message.trim()) {
-      return res.status(400).json({ success: false, message: 'Message content is required' });
+    const { message, author_name, author_email, sender_type, internal, clientMessageId, attachments } = req.body;
+    const incomingAttachments = Array.isArray(attachments) ? attachments : [];
+
+    if ((!message || !message.trim()) && incomingAttachments.length === 0) {
+      return res.status(400).json({ success: false, message: 'Message content or document is required' });
     }
 
     const lookup = mongoose.Types.ObjectId.isValid(req.params.id)
@@ -831,17 +874,35 @@ exports.addTicketMessage = async (req, res, next) => {
       ? (req.user.email || author_email || '')
       : (req.user.email || author_email || '');
 
+    const finalMessageText = (message || '').trim() || (
+      incomingAttachments.length === 1
+        ? `Attached document: ${incomingAttachments[0].name}`
+        : `Attached ${incomingAttachments.length} document(s)`
+    );
+
     const newMsgDoc = {
       sender,
       sender_id: req.user?.id && mongoose.Types.ObjectId.isValid(req.user.id) ? req.user.id : undefined,
       author_name: author,
       author_email: email,
-      message: message.trim(),
+      message: finalMessageText,
       internal: isInternalNote,
+      attachments: incomingAttachments,
       created_at: new Date()
     };
 
     ticket.messages.push(newMsgDoc);
+
+    // Sync attachments to ticket.attachments
+    if (incomingAttachments.length > 0) {
+      ticket.attachments = ticket.attachments || [];
+      incomingAttachments.forEach((att) => {
+        if (!ticket.attachments.some((a) => a.url === att.url)) {
+          ticket.attachments.push(att);
+        }
+      });
+    }
+
     ticket.updated_at = new Date();
 
     // Auto-update status
@@ -876,11 +937,21 @@ exports.addTicketMessage = async (req, res, next) => {
     const createdMsg = ticketObj.messages[ticketObj.messages.length - 1];
 
     if (req.io) {
+      console.log('[addTicketMessage emitting new_ticket_message]', {
+        ticketId: ticketObj.id.toString(),
+        ticketCode: ticketObj.code,
+        room1: `ticket_${ticketObj.id}`,
+        room2: `ticket_${ticketObj.code}`,
+        message: createdMsg.message,
+      });
       const messagePayload = {
         ticketId: ticketObj.id.toString(),
         ticketCode: ticketObj.code,
         clientMessageId: clientMessageId || null,
-        message: createdMsg,
+        message: {
+          ...createdMsg,
+          clientMessageId: clientMessageId || null,
+        },
         ticket: ticketObj,
       };
 
@@ -995,22 +1066,24 @@ exports.updateTicketStatus = async (req, res, next) => {
         ticket.status = status.toUpperCase();
       }
     } else if (isStaff) {
+      // ONLY Admin can modify ticket status, priority, or assignee
+      const ADMIN_ROLES = ['Super Admin', 'Admin', 'Managing Director MD', 'SUPER_ADMIN', 'COMPANY_ADMIN'];
+      const isAdminUser = Boolean(req.user?.isAdmin) || ADMIN_ROLES.includes(req.user?.role) || (req.user?.role && req.user.role.toLowerCase().includes('admin'));
+
+      if (!isAdminUser) {
+        return res.status(403).json({
+          success: false,
+          error: {
+            code: 'forbidden',
+            message: 'Access denied: Only administrators can modify ticket status, priority, or assignee',
+          },
+        });
+      }
+
       if (status) ticket.status = status.toUpperCase();
-      // Only Admin or Manager can alter priority or reassign tickets
-      if (req.user.isAdmin || req.user.isManager) {
-        if (priority) ticket.priority = priority.toUpperCase();
-        if (assignee_id !== undefined) {
-          ticket.assignee_id = (assignee_id && mongoose.Types.ObjectId.isValid(assignee_id)) ? assignee_id : null;
-        }
-      } else {
-        // Regular user can only update status
-        if (status) ticket.status = status.toUpperCase();
-        if (assignee_id !== undefined && String(assignee_id) !== String(ticket.assignee_id)) {
-          return res.status(403).json({
-            success: false,
-            error: { code: 'forbidden', message: 'Only managers and admins can reassign tickets' }
-          });
-        }
+      if (priority) ticket.priority = priority.toUpperCase();
+      if (assignee_id !== undefined) {
+        ticket.assignee_id = (assignee_id && mongoose.Types.ObjectId.isValid(assignee_id)) ? assignee_id : null;
       }
     }
 
@@ -1117,14 +1190,7 @@ exports.addTicketAttachment = async (req, res, next) => {
     let attachmentObj = null;
 
     if (req.file) {
-      const uploadResult = await uploadToCloudinary(req.file.buffer, 'ticket_attachments');
-      attachmentObj = {
-        name: req.file.originalname,
-        url: uploadResult.secure_url || uploadResult.url,
-        type: req.file.mimetype,
-        size: req.file.size,
-        uploaded_at: new Date()
-      };
+      attachmentObj = await processAttachmentUpload(req.file, req);
     } else if (req.body.url && req.body.name) {
       attachmentObj = {
         name: req.body.name,

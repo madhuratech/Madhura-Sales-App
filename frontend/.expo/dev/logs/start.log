@@ -90418,3 +90418,137 @@
 {"_e":"metro:bundling:progress","_t":1793772071546,"id":"p","progress":0.9950474694351478,"total":3630,"current":3621}
 {"_e":"metro:bundling:progress","_t":1793772071646,"id":"p","progress":0.999,"total":3630,"current":3630}
 {"_e":"metro:bundling:done","_t":1793772071964,"id":"p","total":3630,"ms":20835.559613}
+{"_e":"metro:bundling:started","_t":1793857793824,"id":"s","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793857793827,"id":"s","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793857794569,"id":"s","total":1,"ms":742.184612}
+{"_e":"metro:bundling:started","_t":1793857795205,"id":"t","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793857795206,"id":"t","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793857795482,"id":"t","total":1,"ms":276.087577}
+{"_e":"metro:client_log","_t":1793857795570,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1793857795697,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
+{"_e":"metro:client_log","_t":1793857795961,"level":"warn","data":["[expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality."]}
+{"_e":"metro:client_log","_t":1793857797690,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"metro:client_log","_t":1793857798072,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:client_log","_t":1793857798072,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:client_log","_t":1793858991023,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:client_log","_t":1793858992005,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:bundling:failed","_t":1793859161636,"id":null,"message":"SyntaxError: /Users/admin/Enterprise HRMS/Madhura-Sales-App/frontend/screens/SupportScreen.web.jsx: Missing semicolon. (537:13)\n\n  535 |   };\n  536 |         type: 'error',\n> 537 |         text1: 'Reply Not Delivered',\n      |              ^\n  538 |         text2: 'Network issue. Click Retry to re-send.',\n  539 |       });\n  540 |     } finally {","importStack":null,"filename":"screens/SupportScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1793859161669,"level":"error","data":["[TransformError: SyntaxError: /Users/admin/Enterprise HRMS/Madhura-Sales-App/frontend/screens/SupportScreen.web.jsx: Missing semicolon. (537:13)\n\n  535 |   };\n  536 |         type: 'error',\n> 537 |         text1: 'Reply Not Delivered',\n      |              ^\n  538 |         text2: 'Network issue. Click Retry to re-send.',\n  539 |       });\n  540 |     } finally {]"]}
+{"_e":"metro:bundling:started","_t":1793859474031,"id":"11","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793859474031,"id":"11","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1793859474078,"id":"11","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1793859474361,"id":"11","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793859475005,"id":"11","total":1,"ms":974.339766}
+{"_e":"metro:bundling:started","_t":1793859610408,"id":"13","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793859610409,"id":"13","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793859610831,"id":"13","total":1,"ms":422.586212}
+{"_e":"metro:bundling:started","_t":1793859611296,"id":"14","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793859611296,"id":"14","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793859611452,"id":"14","total":1,"ms":156.053905}
+{"_e":"metro:client_log","_t":1793859611631,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1793859611794,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
+{"_e":"metro:client_log","_t":1793859611848,"level":"warn","data":["[expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality."]}
+{"_e":"metro:client_log","_t":1793859612407,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"metro:client_log","_t":1793859612650,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:client_log","_t":1793859612688,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:bundling:failed","_t":1793860451483,"id":null,"message":"SyntaxError: /Users/admin/Enterprise HRMS/Madhura-Sales-App/frontend/screens/SupportScreen.web.jsx: Identifier 'currentUser' has already been declared. (102:9)\n\n  100 |   const [uploadingAttachment, setUploadingAttachment] = useState(false);\n  101 |   const fileInputRef = useRef(null);\n> 102 |   const [currentUser, setCurrentUser] = useState(null);\n      |          ^\n  103 |\n  104 |   // Real-time socket states & refs\n  105 |   const [isSocketConnected, setIsSocketConnected] = useState(false);","importStack":null,"filename":"screens/SupportScreen.web.jsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1793860451495,"level":"error","data":["[TransformError: SyntaxError: /Users/admin/Enterprise HRMS/Madhura-Sales-App/frontend/screens/SupportScreen.web.jsx: Identifier 'currentUser' has already been declared. (102:9)\n\n  100 |   const [uploadingAttachment, setUploadingAttachment] = useState(false);\n  101 |   const fileInputRef = useRef(null);\n> 102 |   const [currentUser, setCurrentUser] = useState(null);\n      |          ^\n  103 |\n  104 |   // Real-time socket states & refs\n  105 |   const [isSocketConnected, setIsSocketConnected] = useState(false);]"]}
+{"_e":"metro:bundling:started","_t":1793860605354,"id":"1b","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793860605355,"id":"1b","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1793860605392,"id":"1b","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1793860605751,"id":"1b","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793860606094,"id":"1b","total":1,"ms":739.865843}
+{"_e":"metro:bundling:started","_t":1793861736315,"id":"1c","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793861736315,"id":"1c","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1793861736364,"id":"1c","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1793861736672,"id":"1c","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793861737061,"id":"1c","total":1,"ms":745.476459}
+{"_e":"metro:bundling:started","_t":1793862504666,"id":"1e","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793862504667,"id":"1e","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793862505094,"id":"1e","total":1,"ms":427.680888}
+{"_e":"metro:bundling:started","_t":1793862505554,"id":"1f","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793862505554,"id":"1f","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793862505750,"id":"1f","total":1,"ms":195.554531}
+{"_e":"metro:client_log","_t":1793862505883,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1793862505995,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
+{"_e":"metro:client_log","_t":1793862506132,"level":"warn","data":["[expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality."]}
+{"_e":"metro:client_log","_t":1793862506713,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"metro:client_log","_t":1793862506988,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:client_log","_t":1793862506988,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:bundling:started","_t":1793863463128,"id":"1j","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793863463131,"id":"1j","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1793863463224,"id":"1j","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1793863464317,"id":"1j","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793863464935,"id":"1j","total":1,"ms":1804.089301}
+{"_e":"root:init","_t":1793868544449,"format":"v0-jsonl","version":"56.1.25"}
+{"_e":"env:mode","_t":1793868544451,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1793868544467,"mode":"development","files":["../../../.env"],"env":{"EXPO_PUBLIC_API_URL":"http://localhost:5005/api","EXPO_PUBLIC_SOCKET_URL":"http://localhost:5005"}}
+{"_e":"devserver:start","_t":1793868545531,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../../../app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1793868547258,"serverRoot":"../../..","projectRoot":"../../..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"metro:instantiate","_t":1793868550281,"atlas":false,"workers":10,"host":"::","port":8081}
+{"_e":"metro:bundling:started","_t":1793876919668,"id":"2","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793876919671,"id":"2","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1793876919702,"id":"2","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1793876919809,"id":"2","progress":0.03132586733495184,"total":113,"current":20}
+{"_e":"metro:bundling:progress","_t":1793876919909,"id":"2","progress":0.0921134309376372,"total":257,"current":78}
+{"_e":"metro:bundling:progress","_t":1793876920009,"id":"2","progress":0.21540257777981273,"total":418,"current":194}
+{"_e":"metro:bundling:progress","_t":1793876920109,"id":"2","progress":0.3397224489795918,"total":525,"current":306}
+{"_e":"metro:bundling:progress","_t":1793876920209,"id":"2","progress":0.3397224489795918,"total":653,"current":373}
+{"_e":"metro:bundling:progress","_t":1793876920309,"id":"2","progress":0.44281793366042443,"total":819,"current":545}
+{"_e":"metro:bundling:progress","_t":1793876920409,"id":"2","progress":0.5655653894210746,"total":980,"current":737}
+{"_e":"metro:bundling:progress","_t":1793876920509,"id":"2","progress":0.6069826446280991,"total":1100,"current":857}
+{"_e":"metro:bundling:progress","_t":1793876920667,"id":"2","progress":0.6507561142136868,"total":1195,"current":964}
+{"_e":"metro:bundling:progress","_t":1793876920767,"id":"2","progress":0.6507561142136868,"total":2971,"current":995}
+{"_e":"metro:bundling:progress","_t":1793876920867,"id":"2","progress":0.6507561142136868,"total":3066,"current":1149}
+{"_e":"metro:bundling:progress","_t":1793876920967,"id":"2","progress":0.6507561142136868,"total":3095,"current":1599}
+{"_e":"metro:bundling:progress","_t":1793876921067,"id":"2","progress":0.7209902886776055,"total":3095,"current":2628}
+{"_e":"metro:bundling:progress","_t":1793876921203,"id":"2","progress":0.9003146237923614,"total":3128,"current":2968}
+{"_e":"metro:bundling:progress","_t":1793876921330,"id":"2","progress":0.9230473496003884,"total":3185,"current":3060}
+{"_e":"metro:bundling:progress","_t":1793876921444,"id":"2","progress":0.9424711036956062,"total":3323,"current":3226}
+{"_e":"metro:bundling:progress","_t":1793876921545,"id":"2","progress":0.999,"total":3437,"current":3436}
+{"_e":"metro:bundling:done","_t":1793876921723,"id":"2","total":3437,"ms":2053.847061}
+{"_e":"metro:bundling:started","_t":1793876922011,"id":"3","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793876922011,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793876922130,"id":"3","total":1,"ms":118.915962}
+{"_e":"metro:client_log","_t":1793876922229,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1793876922296,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
+{"_e":"metro:client_log","_t":1793876922348,"level":"warn","data":["[expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality."]}
+{"_e":"metro:bundling:started","_t":1793876922658,"id":"5","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793876922658,"id":"5","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793876922787,"id":"5","total":1,"ms":129.823942}
+{"_e":"metro:bundling:started","_t":1793876923048,"id":"6","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793876923048,"id":"6","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793876923185,"id":"6","total":1,"ms":136.457452}
+{"_e":"metro:client_log","_t":1793876923283,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1793876923283,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
+{"_e":"metro:client_log","_t":1793876923284,"level":"warn","data":["[expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality."]}
+{"_e":"metro:client_log","_t":1793876923376,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"metro:client_log","_t":1793876923504,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:client_log","_t":1793876923504,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:client_log","_t":1793876933525,"level":"warn","data":["Failed to fetch tickets:","[AxiosError: Request failed with status code 500]"]}
+{"_e":"metro:client_log","_t":1793876933526,"level":"log","data":["Web audio play failed (interaction required)","[NotAllowedError: play() failed because the user didn't interact with the document first. https://goo.gl/xX8pDD]"]}
+{"_e":"metro:bundling:started","_t":1793947714429,"id":"c","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793947714433,"id":"c","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793947714780,"id":"c","total":1,"ms":348.322214}
+{"_e":"metro:bundling:started","_t":1793947715127,"id":"d","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793947715127,"id":"d","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793947715260,"id":"d","total":1,"ms":133.558293}
+{"_e":"metro:client_log","_t":1793947715347,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1793947715436,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
+{"_e":"metro:client_log","_t":1793947715503,"level":"warn","data":["[expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality."]}
+{"_e":"metro:client_log","_t":1793947715894,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"metro:client_log","_t":1793947715993,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:client_log","_t":1793947715994,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:client_log","_t":1793947715994,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:bundling:started","_t":1793953116727,"id":"i","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793953116727,"id":"i","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793953116931,"id":"i","total":1,"ms":204.328076}
+{"_e":"metro:bundling:started","_t":1793953117235,"id":"j","platform":"web","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1793953117235,"id":"j","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1793953117371,"id":"j","total":1,"ms":135.370396}
+{"_e":"metro:client_log","_t":1793953117462,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1793953117544,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
+{"_e":"metro:client_log","_t":1793953117599,"level":"warn","data":["[expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality."]}
+{"_e":"metro:client_log","_t":1793953117991,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"metro:client_log","_t":1793953118088,"level":"log","data":["Mobile connected to Socket.io"]}
+{"_e":"metro:client_log","_t":1793953118088,"level":"log","data":["Mobile connected to Socket.io"]}
