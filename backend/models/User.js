@@ -117,6 +117,14 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  canReopenTickets: {
+    type: Boolean,
+    default: false,
+  },
+  permissions: {
+    type: [String],
+    default: [],
+  },
 },
   {
     timestamps: true,

@@ -113,6 +113,19 @@ export default function SupportScreen() {
         );
       };
 
+      const handleTicketStatusChanged = (statusPayload) => {
+        if (!statusPayload || !isMounted) return;
+        const { ticketId, ticketCode, status, ticket: updatedTicket } = statusPayload;
+        const tid = String(ticketId);
+        setTickets((prev) =>
+          prev.map((t) =>
+            String(t._id || t.id) === tid || t.code === ticketCode
+              ? { ...t, ...(updatedTicket || {}), status }
+              : t
+          )
+        );
+      };
+
       const handleTicketCreated = (newTicket) => {
         if (!newTicket || !isMounted) return;
         if (newTicket.source && newTicket.source !== 'CRM') return;
@@ -137,6 +150,7 @@ export default function SupportScreen() {
       activeSock.on('disconnect', onDisconnect);
       activeSock.on('new_ticket_message', handleNewMessage);
       activeSock.on('ticket_updated', handleTicketUpdated);
+      activeSock.on('ticket_status_changed', handleTicketStatusChanged);
       activeSock.on('ticket_created', handleTicketCreated);
 
       return () => {
@@ -144,6 +158,7 @@ export default function SupportScreen() {
         activeSock.off('disconnect', onDisconnect);
         activeSock.off('new_ticket_message', handleNewMessage);
         activeSock.off('ticket_updated', handleTicketUpdated);
+        activeSock.off('ticket_status_changed', handleTicketStatusChanged);
         activeSock.off('ticket_created', handleTicketCreated);
       };
     };

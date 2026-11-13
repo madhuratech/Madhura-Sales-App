@@ -49,6 +49,32 @@ const ticketSchema = new mongoose.Schema({
   assignee_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
   messages: [ticketMessageSchema],
   attachments: [attachmentSchema],
+  closed_at: { type: Date },
+  closed_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  closed_by_name: { type: String },
+  reopened_at: { type: Date },
+  reopened_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  reopened_by_name: { type: String },
+  reopen_history: [
+    {
+      reopened_at: { type: Date, default: Date.now },
+      reopened_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      reopened_by_name: { type: String },
+      reopened_by_role: { type: String },
+      reason: { type: String }
+    }
+  ],
+  status_history: [
+    {
+      from_status: { type: String },
+      to_status: { type: String, required: true },
+      changed_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      changed_by_name: { type: String },
+      changed_by_role: { type: String },
+      reason: { type: String },
+      changed_at: { type: Date, default: Date.now }
+    }
+  ],
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now }
 }, { timestamps: true });

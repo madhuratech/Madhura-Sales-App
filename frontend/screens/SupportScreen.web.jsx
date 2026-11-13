@@ -30,6 +30,7 @@ import {
   Wifi,
   WifiOff,
   Lock,
+  Unlock,
   Loader2,
   Paperclip,
   FileText,
@@ -381,11 +382,58 @@ export default function SupportScreenWeb() {
         }
       };
 
+      // 5. Ticket Status Changed (Closed / Reopened Real-Time Sync)
+      const handleTicketStatusChanged = (statusPayload) => {
+        if (!statusPayload || !isMounted) return;
+        const { ticketId, ticketCode, status, ticket: updatedTicket } = statusPayload;
+        const tid = String(ticketId);
+
+        setTickets((prev) =>
+          prev.map((t) => (String(t._id || t.id) === tid || t.code === ticketCode ? { ...t, ...(updatedTicket || {}), status } : t))
+        );
+
+        if (
+          activeTicketRef.current &&
+          (String(activeTicketRef.current._id || activeTicketRef.current.id) === tid ||
+            activeTicketRef.current.code === ticketCode)
+        ) {
+          setActiveTicket((prev) => ({
+            ...prev,
+            ...(updatedTicket || {}),
+            status,
+            closed_at: statusPayload.closed_at || prev?.closed_at,
+            closed_by_name: statusPayload.closed_by_name || prev?.closed_by_name,
+            reopened_at: statusPayload.reopened_at || prev?.reopened_at,
+            reopened_by_name: statusPayload.reopened_by_name || prev?.reopened_by_name,
+            reopen_history: statusPayload.reopen_history || prev?.reopen_history,
+          }));
+
+          if (status === 'CLOSED') {
+            playNotificationSound('notification');
+            Toast.show({
+              type: 'info',
+              text1: `Ticket ${ticketCode || ''} Marked as CLOSED`,
+              text2: 'Messaging is no longer available.',
+              visibilityTime: 4000,
+            });
+          } else if (status === 'OPEN') {
+            playNotificationSound('notification');
+            Toast.show({
+              type: 'success',
+              text1: `Ticket ${ticketCode || ''} Reopened`,
+              text2: 'Messaging has been re-enabled.',
+              visibilityTime: 4000,
+            });
+          }
+        }
+      };
+
       activeSock.on('connect', onConnect);
       activeSock.on('disconnect', onDisconnect);
       activeSock.on('new_ticket_message', handleNewMessage);
       activeSock.on('ticket_message', handleNewMessage);
       activeSock.on('ticket_updated', handleTicketUpdated);
+      activeSock.on('ticket_status_changed', handleTicketStatusChanged);
       activeSock.on('ticket_created', handleTicketCreated);
       activeSock.on('ticket_typing', handleTicketTyping);
     };
@@ -400,6 +448,7 @@ export default function SupportScreenWeb() {
         activeSock.off('new_ticket_message');
         activeSock.off('ticket_message');
         activeSock.off('ticket_updated');
+        activeSock.off('ticket_status_changed');
         activeSock.off('ticket_created');
         activeSock.off('ticket_typing');
       }
@@ -431,6 +480,17 @@ export default function SupportScreenWeb() {
 
   // ── Document Selection & Removal ──────────────────────────────────────────
   const handleFileSelect = (e) => {
+    const isClosedTicket = (activeTicket?.status || '').toUpperCase() === 'CLOSED';
+    if (isClosedTicket) {
+      Toast.show({
+        type: 'error',
+        text1: 'Ticket Closed',
+        text2: 'This ticket has been closed. File attachments are disabled.',
+      });
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
@@ -459,11 +519,22 @@ export default function SupportScreenWeb() {
 
   // ── Post Reply (Optimistic Rendering + Sending/Sent/Failed States + Document Upload) ────────
   const handlePostReply = async (retryMsg = null) => {
+    if (!activeTicket) return;
+
+    const isClosedTicket = (activeTicket.status || '').toUpperCase() === 'CLOSED';
+    if (isClosedTicket) {
+      Toast.show({
+        type: 'error',
+        text1: 'Ticket Closed',
+        text2: 'This ticket has been closed. Messaging is no longer available.',
+      });
+      return;
+    }
+
     const textToSend = (retryMsg ? retryMsg.message : replyText).trim();
     const filesToUpload = retryMsg?.attachedFiles || attachedFiles;
 
     if (!textToSend && filesToUpload.length === 0) return;
-    if (!activeTicket) return;
 
     const clientMsgId =
       retryMsg?.clientMessageId || `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -579,8 +650,12 @@ export default function SupportScreenWeb() {
     }
     if (!activeTicket) return;
     try {
+      const isReopening = (activeTicket.status || '').toUpperCase() === 'CLOSED' && newStatus !== 'CLOSED';
+      const isClosing = (activeTicket.status || '').toUpperCase() !== 'CLOSED' && newStatus === 'CLOSED';
+
       const res = await api.patch(`/v1/tickets/${activeTicket._id || activeTicket.id}`, {
         status: newStatus,
+        reason: isReopening ? 'Reopened by CRM administrator' : isClosing ? 'Closed by CRM administrator' : undefined,
       });
       const updated = res.data?.data || res.data;
       if (updated) {
@@ -589,9 +664,21 @@ export default function SupportScreenWeb() {
           prev.map((t) => ((t._id || t.id) === (updated._id || updated.id) ? updated : t))
         );
       }
-      Toast.show({ type: 'success', text1: 'Status Updated', text2: `Status changed to ${newStatus}` });
+      Toast.show({
+        type: 'success',
+        text1: isReopening ? 'Ticket Reopened' : isClosing ? 'Ticket Closed' : 'Status Updated',
+        text2: isReopening
+          ? 'Ticket reopened. Messaging has been re-enabled in both applications.'
+          : isClosing
+          ? 'Ticket marked as CLOSED. Messaging is now disabled.'
+          : `Status changed to ${newStatus}`,
+      });
     } catch (err) {
-      Toast.show({ type: 'error', text1: 'Error', text2: err.response?.data?.error?.message || 'Failed to update ticket status' });
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: err.response?.data?.error?.message || err.response?.data?.message || 'Failed to update ticket status',
+      });
     }
   };
 
@@ -997,15 +1084,22 @@ export default function SupportScreenWeb() {
                     <span className="text-xs font-bold text-amber-600 uppercase tracking-wide">
                       {activeTicket.category || 'GENERAL'}
                     </span>
-                    <span
-                      className="font-bold px-2 py-0.5 rounded-full text-[11px]"
-                      style={{
-                        backgroundColor: (STATUS_CONFIG[(activeTicket.status || 'OPEN').toUpperCase()] || STATUS_CONFIG.OPEN).bg,
-                        color: (STATUS_CONFIG[(activeTicket.status || 'OPEN').toUpperCase()] || STATUS_CONFIG.OPEN).color,
-                      }}
-                    >
-                      {(STATUS_CONFIG[(activeTicket.status || 'OPEN').toUpperCase()] || STATUS_CONFIG.OPEN).label}
-                    </span>
+                    {(activeTicket.status || '').toUpperCase() === 'CLOSED' ? (
+                      <span className="inline-flex items-center gap-1.5 font-bold px-3 py-0.5 rounded-full text-[11px] bg-slate-900 text-white shadow-xs border border-slate-700 animate-in fade-in">
+                        <Lock size={12} className="text-amber-400" />
+                        <span>CLOSED</span>
+                      </span>
+                    ) : (
+                      <span
+                        className="font-bold px-2 py-0.5 rounded-full text-[11px]"
+                        style={{
+                          backgroundColor: (STATUS_CONFIG[(activeTicket.status || 'OPEN').toUpperCase()] || STATUS_CONFIG.OPEN).bg,
+                          color: (STATUS_CONFIG[(activeTicket.status || 'OPEN').toUpperCase()] || STATUS_CONFIG.OPEN).color,
+                        }}
+                      >
+                        {(STATUS_CONFIG[(activeTicket.status || 'OPEN').toUpperCase()] || STATUS_CONFIG.OPEN).label}
+                      </span>
+                    )}
                     <span
                       className="font-bold px-2 py-0.5 rounded-full text-[11px]"
                       style={{
@@ -1045,13 +1139,29 @@ export default function SupportScreenWeb() {
                     <select
                       value={(activeTicket.status || 'OPEN').toUpperCase()}
                       onChange={(e) => handleStatusChange(e.target.value)}
-                      className="font-bold border border-slate-300 rounded-lg px-2.5 py-1 text-xs outline-none bg-white cursor-pointer hover:border-slate-400 transition"
+                      className={`font-bold border rounded-lg px-2.5 py-1 text-xs outline-none bg-white cursor-pointer transition ${
+                        (activeTicket.status || '').toUpperCase() === 'CLOSED'
+                          ? 'border-slate-800 text-slate-900 bg-slate-100'
+                          : 'border-slate-300 hover:border-slate-400'
+                      }`}
                     >
                       <option value="OPEN">Open</option>
                       <option value="IN_PROGRESS">In Progress</option>
                       <option value="RESOLVED">Resolved</option>
                       <option value="CLOSED">Closed</option>
                     </select>
+
+                    {(activeTicket.status || '').toUpperCase() === 'CLOSED' && (
+                      <button
+                        type="button"
+                        onClick={() => handleStatusChange('OPEN')}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-2xs transition cursor-pointer"
+                        title="Reopen this closed ticket"
+                      >
+                        <Unlock size={12} />
+                        <span>Reopen</span>
+                      </button>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -1258,120 +1368,161 @@ export default function SupportScreenWeb() {
               </div>
 
               {/* Reply Input Bar */}
-              <div className="p-4 bg-slate-50 border-t border-slate-200">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold text-slate-600 flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isInternal}
-                      onChange={(e) => setIsInternal(e.target.checked)}
-                      className="rounded text-[#1B2B4B] focus:ring-0"
-                    />
-                    <span>Post as Private Internal Note (Hidden from client)</span>
-                  </label>
-                  <span className="text-[10px] text-slate-400 hidden sm:inline">
-                    Cmd+Enter or Ctrl+Enter to send
-                  </span>
-                </div>
-
-                {/* Hidden File Input for document upload */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg,.zip,.rar"
-                  onChange={handleFileSelect}
-                  style={{ display: 'none' }}
-                />
-
-                {/* Selected Documents Preview Strip */}
-                {attachedFiles.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-2 p-2 bg-slate-100/90 rounded-xl border border-slate-200">
-                    {attachedFiles.map((f, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 shadow-2xs"
-                      >
-                        <FileText size={14} className="text-blue-600 shrink-0" />
-                        <span className="font-medium truncate max-w-[150px]" title={f.name}>
-                          {f.name}
-                        </span>
-                        <span className="text-[10px] text-slate-400">
-                          ({f.size ? (f.size / 1024).toFixed(0) : '0'} KB)
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => removeAttachment(idx)}
-                          className="text-slate-400 hover:text-red-500 ml-1 p-0.5 rounded cursor-pointer transition"
-                          title="Remove document"
-                        >
-                          <X size={13} />
-                        </button>
+              {(activeTicket.status || '').toUpperCase() === 'CLOSED' ? (
+                <div className="p-4 bg-slate-100 border-t border-slate-200">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-amber-50/90 border border-amber-200 rounded-2xl shadow-2xs">
+                    <div className="flex items-start sm:items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-amber-100 text-amber-800 shrink-0">
+                        <Lock size={20} className="text-amber-700" />
                       </div>
-                    ))}
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-[11px] px-2 py-0.5 rounded bg-slate-800 text-white uppercase tracking-wider">
+                            CLOSED
+                          </span>
+                          <p className="text-sm font-bold text-slate-900">
+                            This ticket has been closed. Messaging is no longer available.
+                          </p>
+                        </div>
+                        <p className="text-xs text-slate-600 mt-1">
+                          Neither CRM support agents nor the client can send additional messages or upload attachments while this ticket is closed.
+                          {activeTicket.closed_by_name ? ` Closed by ${activeTicket.closed_by_name}.` : ''}
+                        </p>
+                      </div>
+                    </div>
+
+                    {isAdmin ? (
+                      <button
+                        type="button"
+                        onClick={() => handleStatusChange('OPEN')}
+                        className="self-end sm:self-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer shadow-sm shrink-0"
+                      >
+                        <Unlock size={14} />
+                        <span>Reopen Ticket</span>
+                      </button>
+                    ) : (
+                      <div className="text-[11px] text-slate-500 italic bg-white/70 px-3 py-1.5 rounded-lg border border-amber-200/60 shrink-0">
+                        Only administrators can reopen
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
+              ) : (
+                <div className="p-4 bg-slate-50 border-t border-slate-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-bold text-slate-600 flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isInternal}
+                        onChange={(e) => setIsInternal(e.target.checked)}
+                        className="rounded text-[#1B2B4B] focus:ring-0"
+                      />
+                      <span>Post as Private Internal Note (Hidden from client)</span>
+                    </label>
+                    <span className="text-[10px] text-slate-400 hidden sm:inline">
+                      Cmd+Enter or Ctrl+Enter to send
+                    </span>
+                  </div>
 
-                <div className="flex items-end gap-2">
-                  {/* Document Upload Button */}
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={sendingReply || uploadingAttachment}
-                    title="Upload / Attach Document (PDF, Word, Excel, Images up to 15MB)"
-                    className="p-3 rounded-xl border border-slate-300 hover:border-slate-400 bg-white hover:bg-slate-100 text-slate-600 hover:text-[#1B2B4B] transition flex items-center justify-center cursor-pointer shadow-xs disabled:opacity-50"
-                  >
-                    <Paperclip size={16} />
-                  </button>
-
-                  <textarea
-                    rows={3}
-                    placeholder={
-                      isInternal
-                        ? 'Type private note for internal CRM team...'
-                        : attachedFiles.length > 0
-                        ? 'Add an optional note with your document(s)...'
-                        : 'Type response for client...'
-                    }
-                    value={replyText}
-                    onChange={(e) => handleTypingChange(e.target.value)}
-                    onKeyDown={(e) => {
-                      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-                        e.preventDefault();
-                        handlePostReply();
-                      }
-                    }}
-                    className="flex-1 p-3 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:border-[#1B2B4B] focus:ring-1 focus:ring-[#1B2B4B] text-slate-900 resize-none shadow-xs"
+                  {/* Hidden File Input for document upload */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg,.zip,.rar"
+                    onChange={handleFileSelect}
+                    style={{ display: 'none' }}
                   />
 
-                  <button
-                    onClick={() => handlePostReply()}
-                    disabled={
-                      sendingReply ||
-                      uploadingAttachment ||
-                      (!replyText.trim() && attachedFiles.length === 0)
-                    }
-                    className="px-4 py-3 rounded-xl bg-[#1B2B4B] hover:bg-[#243454] disabled:bg-slate-300 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
-                  >
-                    {uploadingAttachment ? (
-                      <>
-                        <Loader2 size={14} className="animate-spin text-[#F5A623]" />
-                        <span>Uploading...</span>
-                      </>
-                    ) : sendingReply ? (
-                      <>
-                        <Loader2 size={14} className="animate-spin text-[#F5A623]" />
-                        <span>Sending...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Send size={14} />
-                        <span>Send</span>
-                      </>
-                    )}
-                  </button>
+                  {/* Selected Documents Preview Strip */}
+                  {attachedFiles.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2 p-2 bg-slate-100/90 rounded-xl border border-slate-200">
+                      {attachedFiles.map((f, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 shadow-2xs"
+                        >
+                          <FileText size={14} className="text-blue-600 shrink-0" />
+                          <span className="font-medium truncate max-w-[150px]" title={f.name}>
+                            {f.name}
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            ({f.size ? (f.size / 1024).toFixed(0) : '0'} KB)
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removeAttachment(idx)}
+                            className="text-slate-400 hover:text-red-500 ml-1 p-0.5 rounded cursor-pointer transition"
+                            title="Remove document"
+                          >
+                            <X size={13} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex items-end gap-2">
+                    {/* Document Upload Button */}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={sendingReply || uploadingAttachment}
+                      title="Upload / Attach Document (PDF, Word, Excel, Images up to 15MB)"
+                      className="p-3 rounded-xl border border-slate-300 hover:border-slate-400 bg-white hover:bg-slate-100 text-slate-600 hover:text-[#1B2B4B] transition flex items-center justify-center cursor-pointer shadow-xs disabled:opacity-50"
+                    >
+                      <Paperclip size={16} />
+                    </button>
+
+                    <textarea
+                      rows={3}
+                      placeholder={
+                        isInternal
+                          ? 'Type private note for internal CRM team...'
+                          : attachedFiles.length > 0
+                          ? 'Add an optional note with your document(s)...'
+                          : 'Type response for client...'
+                      }
+                      value={replyText}
+                      onChange={(e) => handleTypingChange(e.target.value)}
+                      onKeyDown={(e) => {
+                        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                          e.preventDefault();
+                          handlePostReply();
+                        }
+                      }}
+                      className="flex-1 p-3 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:border-[#1B2B4B] focus:ring-1 focus:ring-[#1B2B4B] text-slate-900 resize-none shadow-xs"
+                    />
+
+                    <button
+                      onClick={() => handlePostReply()}
+                      disabled={
+                        sendingReply ||
+                        uploadingAttachment ||
+                        (!replyText.trim() && attachedFiles.length === 0)
+                      }
+                      className="px-4 py-3 rounded-xl bg-[#1B2B4B] hover:bg-[#243454] disabled:bg-slate-300 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                    >
+                      {uploadingAttachment ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin text-[#F5A623]" />
+                          <span>Uploading...</span>
+                        </>
+                      ) : sendingReply ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin text-[#F5A623]" />
+                          <span>Sending...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send size={14} />
+                          <span>Send</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         )}

@@ -278,7 +278,13 @@ io.on('connection', (socket) => {
         socket.emit('socket_error', { code: 'NOT_FOUND', message: 'Ticket not found' });
         return;
       }
-      console.log('[Socket join_ticket found ticket]', { code: ticket.code, id: ticket._id.toString(), created_by: ticket.created_by?.toString(), assignee_id: ticket.assignee_id?.toString() });
+      console.log('[Socket join_ticket found ticket]', {
+        code: ticket.code,
+        id: ticket._id.toString(),
+        client_id: ticket.client_id?.toString(),
+        created_by: ticket.created_by?.toString(),
+        assignee_id: ticket.assignee_id?.toString()
+      });
 
       // 1. Client Check: Verify client owns the ticket
       if (socket.isClient) {
@@ -296,6 +302,7 @@ io.on('connection', (socket) => {
 
         socket.join(`ticket_${ticket._id}`);
         if (ticket.code) socket.join(`ticket_${ticket.code}`);
+        console.log('[Socket join_ticket] Client joined rooms:', `ticket_${ticket._id}`, `ticket_${ticket.code}`);
         return;
       }
 
@@ -307,9 +314,14 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // 3. Authenticated CRM Staff: Subscribe to real-time conversation while viewing ticket
-      if (socket.isStaff) {
-        console.log('[Socket join_ticket] Staff joined rooms:', `ticket_${ticket._id}`, `ticket_${ticket.code}`);
+      // 3. Authenticated CRM Staff: Only if Manager, Creator, or Assignee
+      const userIdStr = String(socket.userId);
+      const createdByStr = ticket.created_by ? String(ticket.created_by) : null;
+      const assigneeIdStr = ticket.assignee_id ? String(ticket.assignee_id) : null;
+      const isOwnerOrAssignee = (createdByStr === userIdStr || assigneeIdStr === userIdStr);
+
+      if (socket.isManager || isOwnerOrAssignee) {
+        console.log('[Socket join_ticket] Authorized staff joined rooms:', `ticket_${ticket._id}`, `ticket_${ticket.code}`);
         socket.join(`ticket_${ticket._id}`);
         if (ticket.code) socket.join(`ticket_${ticket.code}`);
         return;

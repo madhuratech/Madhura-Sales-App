@@ -569,8 +569,39 @@ async function canUserAccessTicket(user, ticket, action = 'read') {
   return false;
 }
 
+// Helper: Verify whether a user can reopen a closed ticket
+function canUserReopenTicket(user) {
+  if (!user) return false;
+  const isClient = user.isClient || user.role === 'CLIENT';
+  if (isClient) return false; // Clients can NEVER reopen tickets
+
+  // 1. Admin roles have explicit permission
+  const ADMIN_ROLES = ['Super Admin', 'Admin', 'Managing Director MD', 'SUPER_ADMIN', 'COMPANY_ADMIN'];
+  if (user.isAdmin || ADMIN_ROLES.includes(user.role)) return true;
+
+  // 2. Explicit permission flags on user model
+  if (user.canReopenTickets === true) return true;
+  if (user.permissions && Array.isArray(user.permissions)) {
+    if (
+      user.permissions.includes('reopen_ticket') ||
+      user.permissions.includes('reopen_tickets') ||
+      user.permissions.includes('manage_tickets')
+    ) {
+      return true;
+    }
+  }
+
+  // 3. Support Managers / Team Leads with oversight
+  if (['Manager', 'Project Manager', 'Team Lead', 'SUPPORT_MANAGER', 'Support Manager'].includes(user.role)) {
+    return true;
+  }
+
+  return false;
+}
+
 exports.buildUserTicketFilter = buildUserTicketFilter;
 exports.canUserAccessTicket = canUserAccessTicket;
+exports.canUserReopenTicket = canUserReopenTicket;
 
 // --- 6. Questions / Support Tickets Endpoints ---
 exports.getTickets = async (req, res, next) => {
@@ -853,6 +884,18 @@ exports.addTicketMessage = async (req, res, next) => {
       return res.status(404).json({ success: false, error: { code: 'not_found', message: 'Ticket not found' } });
     }
 
+    // STRICT CLOSED TICKET RESTRICTION (Requirement 1, 2, 5)
+    if (ticket.status === 'CLOSED') {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'ticket_closed',
+          message: 'This ticket has been closed. Messaging is no longer available.',
+          status: 'CLOSED'
+        }
+      });
+    }
+
     // Role-based privacy validation
     const hasAccess = await canUserAccessTicket(req.user, ticket, 'message');
     if (!hasAccess) {
@@ -891,34 +934,60 @@ exports.addTicketMessage = async (req, res, next) => {
       created_at: new Date()
     };
 
-    ticket.messages.push(newMsgDoc);
-
-    // Sync attachments to ticket.attachments
-    if (incomingAttachments.length > 0) {
-      ticket.attachments = ticket.attachments || [];
-      incomingAttachments.forEach((att) => {
-        if (!ticket.attachments.some((a) => a.url === att.url)) {
-          ticket.attachments.push(att);
-        }
-      });
-    }
-
-    ticket.updated_at = new Date();
-
-    // Auto-update status
+    // Auto-update status only for active tickets (never auto-reopen CLOSED)
+    let nextStatus = ticket.status;
     if (sender === 'CLIENT') {
-      if (['RESOLVED', 'CLOSED'].includes(ticket.status)) {
-        ticket.status = 'OPEN';
+      if (ticket.status === 'RESOLVED') {
+        nextStatus = 'OPEN';
       }
     } else if (sender === 'STAFF' && !isInternalNote) {
       if (ticket.status === 'OPEN') {
-        ticket.status = 'IN_PROGRESS';
+        nextStatus = 'IN_PROGRESS';
       }
     }
 
-    await ticket.save();
+    // ATOMIC UPDATE TO PREVENT CONCURRENCY / RACE CONDITIONS (Requirement 5)
+    // Ensures at database level that if a ticket is marked CLOSED concurrently,
+    // this update will fail atomically and no message will be stored!
+    const updateOps = {
+      $push: { messages: newMsgDoc },
+      $set: {
+        status: nextStatus,
+        updated_at: new Date()
+      }
+    };
 
-    const populated = await Ticket.findById(ticket._id)
+    if (incomingAttachments.length > 0) {
+      updateOps.$addToSet = {
+        attachments: { $each: incomingAttachments }
+      };
+    }
+
+    const updated = await Ticket.findOneAndUpdate(
+      {
+        ...lookup,
+        status: { $ne: 'CLOSED' }
+      },
+      updateOps,
+      { new: true }
+    );
+
+    if (!updated) {
+      const checkTicket = await Ticket.findOne(lookup).select('status');
+      if (checkTicket && checkTicket.status === 'CLOSED') {
+        return res.status(403).json({
+          success: false,
+          error: {
+            code: 'ticket_closed',
+            message: 'This ticket has been closed. Messaging is no longer available.',
+            status: 'CLOSED'
+          }
+        });
+      }
+      return res.status(404).json({ success: false, error: { code: 'not_found', message: 'Ticket not found' } });
+    }
+
+    const populated = await Ticket.findById(updated._id)
       .populate('client_id', 'businessName ownerName email phone name company_name')
       .populate('assignee_id', 'name email designation role')
       .populate('created_by', 'name email designation role')
@@ -1039,7 +1108,7 @@ exports.getTicketMessages = async (req, res, next) => {
 
 exports.updateTicketStatus = async (req, res, next) => {
   try {
-    const { status, priority, assignee_id } = req.body;
+    const { status, priority, assignee_id, reason } = req.body;
     const lookup = mongoose.Types.ObjectId.isValid(req.params.id)
       ? { _id: req.params.id }
       : { code: req.params.id };
@@ -1059,31 +1128,168 @@ exports.updateTicketStatus = async (req, res, next) => {
 
     const isClient = req.user?.isClient || req.user?.role === 'CLIENT';
     const isStaff = req.user?.isStaff;
+    const oldStatus = ticket.status;
+    const newStatus = status ? status.toUpperCase() : null;
 
     if (isClient) {
-      // Clients can only mark as CLOSED or re-open as OPEN
-      if (status && ['CLOSED', 'OPEN'].includes(status.toUpperCase())) {
-        ticket.status = status.toUpperCase();
+      // 1. If ticket is currently CLOSED, clients can NEVER reopen it (Requirement 4)
+      if (oldStatus === 'CLOSED') {
+        return res.status(403).json({
+          success: false,
+          error: {
+            code: 'reopen_forbidden',
+            message: 'Clients are not permitted to reopen closed tickets. Please contact support.'
+          }
+        });
       }
-    } else if (isStaff) {
-      // ONLY Admin can modify ticket status, priority, or assignee
-      const ADMIN_ROLES = ['Super Admin', 'Admin', 'Managing Director MD', 'SUPER_ADMIN', 'COMPANY_ADMIN'];
-      const isAdminUser = Boolean(req.user?.isAdmin) || ADMIN_ROLES.includes(req.user?.role) || (req.user?.role && req.user.role.toLowerCase().includes('admin'));
 
-      if (!isAdminUser) {
+      // 2. Client closing an open ticket
+      if (newStatus === 'CLOSED') {
+        ticket.status = 'CLOSED';
+        ticket.closed_at = new Date();
+        ticket.closed_by = req.user?.id && mongoose.Types.ObjectId.isValid(req.user.id) ? req.user.id : undefined;
+        ticket.closed_by_name = req.user?.name || 'Client';
+
+        ticket.status_history = ticket.status_history || [];
+        ticket.status_history.push({
+          from_status: oldStatus,
+          to_status: 'CLOSED',
+          changed_by: req.user?.id && mongoose.Types.ObjectId.isValid(req.user.id) ? req.user.id : undefined,
+          changed_by_name: req.user?.name || 'Client',
+          changed_by_role: 'CLIENT',
+          reason: reason || 'Ticket closed by client',
+          changed_at: new Date()
+        });
+
+        ticket.messages.push({
+          sender: 'CLIENT',
+          sender_id: req.user?.id && mongoose.Types.ObjectId.isValid(req.user.id) ? req.user.id : undefined,
+          author_name: req.user?.name || 'Client',
+          author_email: req.user?.email || '',
+          message: '🔒 Ticket closed by client. Messaging is now disabled.',
+          internal: false,
+          created_at: new Date()
+        });
+      } else if (newStatus && newStatus !== oldStatus) {
         return res.status(403).json({
           success: false,
           error: {
             code: 'forbidden',
-            message: 'Access denied: Only administrators can modify ticket status, priority, or assignee',
-          },
+            message: 'Clients may only mark tickets as closed, and cannot modify other ticket properties.'
+          }
         });
       }
+    } else if (isStaff) {
+      // Transition from CLOSED to another status (REOPENING - Requirement 4)
+      if (oldStatus === 'CLOSED' && newStatus && newStatus !== 'CLOSED') {
+        const canReopen = canUserReopenTicket(req.user);
+        if (!canReopen) {
+          return res.status(403).json({
+            success: false,
+            error: {
+              code: 'reopen_unauthorized',
+              message: 'Access denied: Only authorized CRM administrators or agents with explicit permission can reopen a closed ticket.'
+            }
+          });
+        }
 
-      if (status) ticket.status = status.toUpperCase();
-      if (priority) ticket.priority = priority.toUpperCase();
-      if (assignee_id !== undefined) {
-        ticket.assignee_id = (assignee_id && mongoose.Types.ObjectId.isValid(assignee_id)) ? assignee_id : null;
+        const reopenReason = reason || req.body.reopen_reason || 'Reopened by authorized CRM user';
+        ticket.reopen_history = ticket.reopen_history || [];
+        ticket.reopen_history.push({
+          reopened_at: new Date(),
+          reopened_by: req.user.id && mongoose.Types.ObjectId.isValid(req.user.id) ? req.user.id : undefined,
+          reopened_by_name: req.user.name || 'CRM Staff',
+          reopened_by_role: req.user.role || 'Admin',
+          reason: reopenReason
+        });
+
+        ticket.reopened_at = new Date();
+        ticket.reopened_by = req.user.id && mongoose.Types.ObjectId.isValid(req.user.id) ? req.user.id : undefined;
+        ticket.reopened_by_name = req.user.name || 'CRM Staff';
+
+        ticket.status_history = ticket.status_history || [];
+        ticket.status_history.push({
+          from_status: 'CLOSED',
+          to_status: newStatus,
+          changed_by: req.user.id && mongoose.Types.ObjectId.isValid(req.user.id) ? req.user.id : undefined,
+          changed_by_name: req.user.name || 'CRM Staff',
+          changed_by_role: req.user.role || 'Admin',
+          reason: reopenReason,
+          changed_at: new Date()
+        });
+
+        ticket.messages.push({
+          sender: 'STAFF',
+          sender_id: req.user.id && mongoose.Types.ObjectId.isValid(req.user.id) ? req.user.id : undefined,
+          author_name: 'System',
+          author_email: '',
+          message: `🔓 Ticket reopened by ${req.user.name || 'CRM Staff'} (${req.user.role || 'Admin'}). Messaging has been re-enabled.`,
+          internal: false,
+          created_at: new Date()
+        });
+
+        ticket.status = newStatus;
+      } else {
+        // Normal staff status, priority, or assignee update
+        const ADMIN_ROLES = ['Super Admin', 'Admin', 'Managing Director MD', 'SUPER_ADMIN', 'COMPANY_ADMIN'];
+        const isAdminUser = Boolean(req.user?.isAdmin) || ADMIN_ROLES.includes(req.user?.role) || (req.user?.role && req.user.role.toLowerCase().includes('admin'));
+        const isManagerUser = Boolean(req.user?.isManager) || ['Manager', 'Project Manager', 'Team Lead', 'SUPPORT_MANAGER'].includes(req.user?.role);
+
+        if (!isAdminUser && !isManagerUser) {
+          return res.status(403).json({
+            success: false,
+            error: {
+              code: 'forbidden',
+              message: 'Access denied: Only administrators or managers can modify ticket status, priority, or assignee',
+            },
+          });
+        }
+
+        if (newStatus) {
+          if (newStatus === 'CLOSED' && oldStatus !== 'CLOSED') {
+            ticket.closed_at = new Date();
+            ticket.closed_by = req.user.id && mongoose.Types.ObjectId.isValid(req.user.id) ? req.user.id : undefined;
+            ticket.closed_by_name = req.user.name || 'CRM Administrator';
+
+            ticket.status_history = ticket.status_history || [];
+            ticket.status_history.push({
+              from_status: oldStatus,
+              to_status: 'CLOSED',
+              changed_by: req.user.id && mongoose.Types.ObjectId.isValid(req.user.id) ? req.user.id : undefined,
+              changed_by_name: req.user.name || 'CRM Administrator',
+              changed_by_role: req.user.role || 'Admin',
+              reason: reason || 'Ticket marked as closed',
+              changed_at: new Date()
+            });
+
+            ticket.messages.push({
+              sender: 'STAFF',
+              sender_id: req.user.id && mongoose.Types.ObjectId.isValid(req.user.id) ? req.user.id : undefined,
+              author_name: 'System',
+              author_email: '',
+              message: `🔒 Ticket closed by ${req.user.name || 'CRM Administrator'} (${req.user.role || 'Admin'}). Messaging is now disabled.`,
+              internal: false,
+              created_at: new Date()
+            });
+          } else if (newStatus !== oldStatus) {
+            ticket.status_history = ticket.status_history || [];
+            ticket.status_history.push({
+              from_status: oldStatus,
+              to_status: newStatus,
+              changed_by: req.user.id && mongoose.Types.ObjectId.isValid(req.user.id) ? req.user.id : undefined,
+              changed_by_name: req.user.name || 'CRM Administrator',
+              changed_by_role: req.user.role || 'Admin',
+              reason: reason || `Status changed to ${newStatus}`,
+              changed_at: new Date()
+            });
+          }
+          ticket.status = newStatus;
+        }
+
+        if (priority) ticket.priority = priority.toUpperCase();
+        if (assignee_id !== undefined) {
+          ticket.assignee_id = (assignee_id && mongoose.Types.ObjectId.isValid(assignee_id)) ? assignee_id : null;
+        }
       }
     }
 
@@ -1103,21 +1309,38 @@ exports.updateTicketStatus = async (req, res, next) => {
       projectId: populated.project_id,
       createdById: populated.created_by?._id || populated.created_by,
       assigneeId: populated.assignee_id?._id || populated.assignee_id,
+      source: populated.source || 'CRM'
     };
 
     if (req.io) {
-      req.io.to(`ticket_${ticketObj.id}`).emit('ticket_updated', ticketObj);
-      if (ticketObj.code) req.io.to(`ticket_${ticketObj.code}`).emit('ticket_updated', ticketObj);
-      req.io.to('crm_admin_room').emit('ticket_updated', ticketObj);
-      if (ticketObj.createdById) {
-        req.io.to(`user_${ticketObj.createdById}`).emit('ticket_updated', ticketObj);
-      }
-      if (ticketObj.assigneeId) {
-        req.io.to(`user_${ticketObj.assigneeId}`).emit('ticket_updated', ticketObj);
-      }
-      if (ticketObj.clientId) {
-        req.io.to(`client_${ticketObj.clientId}`).emit('ticket_updated', ticketObj);
-      }
+      const statusPayload = {
+        ticketId: ticketObj.id.toString(),
+        ticketCode: ticketObj.code,
+        status: ticketObj.status,
+        isClosed: ticketObj.status === 'CLOSED',
+        closed_at: ticketObj.closed_at,
+        closed_by_name: ticketObj.closed_by_name,
+        reopened_at: ticketObj.reopened_at,
+        reopened_by_name: ticketObj.reopened_by_name,
+        reopen_history: ticketObj.reopen_history,
+        ticket: ticketObj,
+      };
+
+      const rooms = [
+        `ticket_${ticketObj.id}`,
+        ticketObj.code ? `ticket_${ticketObj.code}` : null,
+        'crm_admin_room',
+        'crm_staff_room',
+        ticketObj.companyId ? `${ticketObj.companyId}_tickets` : null,
+        ticketObj.createdById ? `user_${ticketObj.createdById}` : null,
+        ticketObj.assigneeId ? `user_${ticketObj.assigneeId}` : null,
+        ticketObj.clientId ? `client_${ticketObj.clientId}` : null,
+      ].filter(Boolean);
+
+      rooms.forEach((r) => {
+        req.io.to(r).emit('ticket_updated', ticketObj);
+        req.io.to(r).emit('ticket_status_changed', statusPayload);
+      });
     }
 
     res.status(200).json({ success: true, data: ticketObj });
@@ -1179,6 +1402,18 @@ exports.addTicketAttachment = async (req, res, next) => {
       return res.status(404).json({ success: false, error: { code: 'not_found', message: 'Ticket not found' } });
     }
 
+    // STRICT CLOSED TICKET RESTRICTION (Requirement 1, 2, 5)
+    if (ticket.status === 'CLOSED') {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'ticket_closed',
+          message: 'This ticket has been closed. Uploading attachments is no longer available.',
+          status: 'CLOSED'
+        }
+      });
+    }
+
     const hasAccess = await canUserAccessTicket(req.user, ticket, 'message');
     if (!hasAccess) {
       return res.status(403).json({
@@ -1203,10 +1438,33 @@ exports.addTicketAttachment = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'File or attachment url is required' });
     }
 
-    ticket.attachments = ticket.attachments || [];
-    ticket.attachments.push(attachmentObj);
-    ticket.updated_at = new Date();
-    await ticket.save();
+    // ATOMIC UPDATE TO PREVENT RACE CONDITIONS (Requirement 5)
+    const updated = await Ticket.findOneAndUpdate(
+      {
+        ...lookup,
+        status: { $ne: 'CLOSED' }
+      },
+      {
+        $push: { attachments: attachmentObj },
+        $set: { updated_at: new Date() }
+      },
+      { new: true }
+    );
+
+    if (!updated) {
+      const checkTicket = await Ticket.findOne(lookup).select('status');
+      if (checkTicket && checkTicket.status === 'CLOSED') {
+        return res.status(403).json({
+          success: false,
+          error: {
+            code: 'ticket_closed',
+            message: 'This ticket has been closed. Uploading attachments is no longer available.',
+            status: 'CLOSED'
+          }
+        });
+      }
+      return res.status(404).json({ success: false, error: { code: 'not_found', message: 'Ticket not found' } });
+    }
 
     if (req.io) {
       const payload = {
