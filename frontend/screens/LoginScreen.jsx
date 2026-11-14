@@ -21,6 +21,23 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 
+function WebFormWrapper({ children, onSubmit }) {
+  if (Platform.OS === 'web') {
+    return (
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSubmit?.();
+        }}
+        style={{ width: '100%', margin: 0, padding: 0 }}
+      >
+        {children}
+      </form>
+    );
+  }
+  return <>{children}</>;
+}
+
 export default function LoginScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
@@ -209,6 +226,7 @@ export default function LoginScreen() {
             </Text>
           </View>
 
+          <WebFormWrapper onSubmit={handleLogin}>
           {role === 'Admin' || role === 'Super Admin' ? (
             <View style={styles.fieldWrap}>
               <Text style={styles.label}>Email Address</Text>
@@ -314,6 +332,7 @@ export default function LoginScreen() {
               <Text style={styles.signInText}>Sign In →</Text>
             )}
           </TouchableOpacity>
+          </WebFormWrapper>
 
           {/* Divider */}
           <View style={styles.divider}>

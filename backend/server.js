@@ -28,7 +28,7 @@ const io = socketio(server, {
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-internal-api-key', 'X-Requested-With', 'Accept', 'Origin'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-internal-api-key', 'X-Requested-With', 'Accept', 'Origin', 'x-api-key', 'x-client-id', 'x-user-role', 'x-user-id', 'x-user-name', 'x-user-email'],
 }));
 app.options('*', cors());
 app.use(express.json());
