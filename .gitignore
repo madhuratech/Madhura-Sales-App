@@ -5,6 +5,8 @@ node_modules/
 frontend/android/
 frontend/ios/
 frontend/dist/
+backend/dumps/
+*.tar.gz
 
 # Added by ggshield
 .cache_ggshield
